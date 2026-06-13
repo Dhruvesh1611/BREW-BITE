@@ -4,8 +4,10 @@
 import { useState, useEffect } from "react";
 import { Tag, Plus, Trash2, X, RefreshCw, Ticket, Check, ToggleLeft, ToggleRight, Sparkles } from "lucide-react";
 import CoffeeLoader from "@/components/ui/CoffeeLoader";
+import { usePopup } from "@/context/PopupContext";
 
 export default function CouponsDashboardPage() {
+  const { showToast, showAlert, showConfirm } = usePopup();
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -63,13 +65,14 @@ export default function CouponsDashboardPage() {
         fetchCoupons();
         setShowAddModal(false);
         setNewCoupon({ code: "", discount: "", type: "PERCENTAGE", expiresAt: "" });
+        showToast("Coupon created successfully!", "success");
       } else {
         const err = await response.json();
-        alert(err.error || "Failed to create coupon");
+        showAlert(err.error || "Failed to create coupon", "Create Coupon", "error");
       }
     } catch (error) {
       console.error("Failed to create coupon:", error);
-      alert("Error creating coupon");
+      showAlert("Error creating coupon", "Create Coupon", "error");
     }
   };
 
@@ -98,7 +101,8 @@ export default function CouponsDashboardPage() {
   };
 
   const handleDeleteCoupon = async (id) => {
-    if (!confirm("Are you sure you want to delete this coupon?")) return;
+    const confirmed = await showConfirm("Are you sure you want to delete this coupon?", "Delete Coupon");
+    if (!confirmed) return;
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
@@ -111,9 +115,14 @@ export default function CouponsDashboardPage() {
 
       if (response.ok) {
         setCoupons(prev => prev.filter(c => c.id !== id));
+        showToast("Coupon deleted successfully!", "success");
+      } else {
+        const err = await response.json();
+        showAlert(err.error || "Failed to delete coupon", "Delete Coupon", "error");
       }
     } catch (error) {
       console.error("Failed to delete coupon:", error);
+      showAlert("Error deleting coupon", "Delete Coupon", "error");
     }
   };
 

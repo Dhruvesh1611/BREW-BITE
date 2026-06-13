@@ -3,11 +3,17 @@
 import { useState, useEffect } from "react";
 import { Clock, Receipt, Search, X, Download } from "lucide-react";
 import emailjs from '@emailjs/browser';
+import { usePopup } from "@/context/PopupContext";
 
 export default function POSOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const { showToast, showAlert } = usePopup();
+
+  // Local state for Email Receipt Input Dialog
+  const [emailOrder, setEmailOrder] = useState(null);
+  const [emailInput, setEmailInput] = useState("");
 
   useEffect(() => {
     fetchOrders();
@@ -44,6 +50,39 @@ export default function POSOrdersPage() {
     }
   };
 
+  const sendEmailReceipt = async (orderToEmail, recipient) => {
+    // EmailJS Configuration
+    const SERVICE_ID = process.env.NEXT_PUBLIC_SERVICE_ID;
+    const PUBLIC_KEY = process.env.NEXT_PUBLIC_PUBLIC_KEY;
+    const TEMPLATE_ID = process.env.NEXT_PUBLIC_TEMPLATE_ID;
+
+    const templateParams = {
+      email: recipient,
+      order_id: orderToEmail.orderNumber,
+      orders: orderToEmail.items.map(item => ({
+        name: item.productName,
+        price: Number(item.price).toFixed(2),
+        price_formatted: `₹${Number(item.price).toFixed(2)}`,
+        units: item.quantity
+      })),
+      cost: {
+        shipping: "0.00",
+        tax: (Number(orderToEmail.totalAmount) - orderToEmail.items.reduce((s, i) => s + (Number(i.price) * i.quantity), 0)).toFixed(2),
+        total: Number(orderToEmail.totalAmount).toFixed(2)
+      },
+      message: `Receipt for Order ${orderToEmail.orderNumber}. Total: ₹${Number(orderToEmail.totalAmount).toFixed(2)}`
+    };
+
+    try {
+      const response = await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+      console.log('SUCCESS!', response.status, response.text);
+      showToast(`Receipt sent successfully to ${recipient}!`, "success");
+    } catch (error) {
+      console.error('FAILED...', error);
+      showAlert(`Failed to send email: ${error.text || 'Unknown Error'}`, "Email Receipt", "error");
+    }
+  };
+
   const OrderDetailsModal = ({ order, onClose }) => {
     if (!order) return null;
 
@@ -60,42 +99,12 @@ export default function POSOrdersPage() {
     };
 
     const handleEmailReceipt = async () => {
-      let recipient = order.customerEmail;
-
+      const recipient = order.customerEmail;
       if (!recipient) {
-        recipient = prompt("No email on file. Please enter customer email:");
-        if (!recipient) return;
-      }
-
-      // EmailJS Configuration
-      const SERVICE_ID = process.env.NEXT_PUBLIC_SERVICE_ID;
-      const PUBLIC_KEY = process.env.NEXT_PUBLIC_PUBLIC_KEY;
-      const TEMPLATE_ID = process.env.NEXT_PUBLIC_TEMPLATE_ID;
-
-      const templateParams = {
-        email: recipient,
-        order_id: order.orderNumber,
-        orders: order.items.map(item => ({
-          name: item.productName,
-          price: Number(item.price).toFixed(2),
-          price_formatted: `₹${Number(item.price).toFixed(2)}`,
-          units: item.quantity
-        })),
-        cost: {
-          shipping: "0.00",
-          tax: (Number(order.totalAmount) - order.items.reduce((s, i) => s + (Number(i.price) * i.quantity), 0)).toFixed(2),
-          total: Number(order.totalAmount).toFixed(2)
-        },
-        message: `Receipt for Order ${order.orderNumber}. Total: ₹${Number(order.totalAmount).toFixed(2)}`
-      };
-
-      try {
-        const response = await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
-        console.log('SUCCESS!', response.status, response.text);
-        alert(`Receipt sent successfully to ${recipient}!`);
-      } catch (error) {
-        console.error('FAILED...', error);
-        alert(`Failed to send email: ${error.text || 'Unknown Error'}`);
+        setEmailInput("");
+        setEmailOrder(order);
+      } else {
+        await sendEmailReceipt(order, recipient);
       }
     };
 
@@ -261,6 +270,50 @@ export default function POSOrdersPage() {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
         />
+      )}
+
+      {/* Custom Email Input Modal */}
+      {emailOrder && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+          <div className="bg-[#FAF9F6] rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 border border-coffee-200/50">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-black text-[#1A4D2E]">Send Email Receipt</h2>
+              <p className="text-[#5F6F65] mt-1">Please enter the customer's email address.</p>
+            </div>
+
+            <div className="mb-6">
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="customer@example.com"
+                autoFocus
+                className="w-full px-5 py-4 rounded-[2rem] bg-white border-2 border-[#E8F5E9] focus:border-[#1A4D2E] focus:outline-none transition-all font-bold text-[#1A4D2E]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => setEmailOrder(null)}
+                className="px-6 py-4 bg-[#FBFBF2] text-[#5F6F65] rounded-[2rem] font-bold hover:bg-gray-100 transition-colors border border-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (emailInput.trim()) {
+                    sendEmailReceipt(emailOrder, emailInput.trim());
+                    setEmailOrder(null);
+                  }
+                }}
+                disabled={!emailInput.trim()}
+                className="px-6 py-4 bg-[#1A4D2E] text-white rounded-[2rem] font-bold hover:bg-[#143d24] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

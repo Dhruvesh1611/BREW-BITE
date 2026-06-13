@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { useCartStore } from "@/stores/cart-store";
 import { Trash2, Minus, Plus, CreditCard, ChefHat, User, MapPin, Package, List } from "lucide-react";
+import { usePopup } from "@/context/PopupContext";
 
 export default function CartSidebar({ onAddCustomer }) {
   const { cart, removeItem, addItem, decreaseQuantity, clearCart, customer, orderId, coupon } = useCartStore();
+  const { showToast, showAlert } = usePopup();
   const [selectedTable, setSelectedTable] = useState(null);
   const [sending, setSending] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -36,7 +38,11 @@ export default function CartSidebar({ onAddCustomer }) {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     if (!customer || !customer.name || !customer.email || !customer.mobile) {
-      alert("Please add customer details (Name, Email, and Mobile) in the sidebar or products page before proceeding.");
+      showAlert(
+        "Please add customer details (Name, Email, and Mobile) in the sidebar or products page before proceeding.",
+        "Checkout Required Information",
+        "warning"
+      );
       return;
     }
 
@@ -77,11 +83,11 @@ export default function CartSidebar({ onAddCustomer }) {
         window.location.href = '/pos/payment';
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to checkout");
+        showAlert(err.message || err.error || "Failed to checkout", "Checkout Failure", "error");
       }
     } catch (e) {
       console.error(e);
-      alert("Checkout error");
+      showAlert("Checkout error", "Checkout Error", "error");
     } finally {
       setCheckingOut(false);
     }
@@ -90,7 +96,11 @@ export default function CartSidebar({ onAddCustomer }) {
   const handleSendToKitchen = async () => {
     if (cart.length === 0) return;
     if (!customer || !customer.name || !customer.email || !customer.mobile) {
-      alert("Please add customer details (Name, Email, and Mobile) in the sidebar or products page before sending to kitchen.");
+      showAlert(
+        "Please add customer details (Name, Email, and Mobile) in the sidebar or products page before sending to kitchen.",
+        "Kitchen Required Information",
+        "warning"
+      );
       return;
     }
     setSending(true);
@@ -134,11 +144,11 @@ export default function CartSidebar({ onAddCustomer }) {
       localStorage.removeItem('pendingOrder');
       localStorage.removeItem('pendingCustomer');
       
-      alert("Order sent to kitchen successfully!");
+      showToast("Order sent to kitchen successfully!", "success");
       window.location.href = '/pos/tables';
     } catch (error) {
       console.error('Send to kitchen error:', error);
-      alert(error.message);
+      showAlert(error.message, "Send to Kitchen Error", "error");
     } finally {
       setSending(false);
     }

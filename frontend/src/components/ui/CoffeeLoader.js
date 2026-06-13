@@ -5,7 +5,7 @@ export default function CoffeeLoader({ size = "md", text = "Brewing..." }) {
   const sizeClasses = {
     sm: "h-12 w-12",
     md: "h-16 w-16",
-    lg: "h-24 w-24",
+    lg: "h-24 w-24", 
     xl: "h-32 w-32"
   };
 

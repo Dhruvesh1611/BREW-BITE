@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, Minus, Trash2, ShoppingCart, CreditCard, User, Edit2, Package, Tag, Utensils, AlertCircle } from "lucide-react";
 import { useCartStore } from "@/stores/cart-store";
 import CustomerModal from "@/components/pos/CustomerModal";
+import { usePopup } from "@/context/PopupContext";
 
 export default function CartPage() {
   const {
@@ -23,6 +24,7 @@ export default function CartPage() {
 
   const [selectedTable, setSelectedTable] = useState(null);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const { showToast, showAlert } = usePopup();
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponSuccess, setCouponSuccess] = useState("");
@@ -135,14 +137,15 @@ export default function CartPage() {
 
       if (res.ok) {
         clearCart();
+        showToast("Order sent to kitchen successfully!", "success");
         window.location.href = '/pos/tables';
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to send order to kitchen");
+        showAlert(err.error || "Failed to send order to kitchen", "Kitchen Error", "error");
       }
     } catch (e) {
       console.error(e);
-      alert("Error sending order to kitchen");
+      showAlert("Error sending order to kitchen", "Kitchen Error", "error");
     }
   };
 
@@ -184,11 +187,11 @@ export default function CartPage() {
         window.location.href = '/pos/payment';
       } else {
         const err = await res.json();
-        alert(err.error || "Failed to checkout");
+        showAlert(err.message || err.error || "Failed to checkout", "Checkout Failure", "error");
       }
     } catch (e) {
       console.error(e);
-      alert("Checkout error");
+      showAlert("Checkout error", "Checkout Error", "error");
     }
   };
 

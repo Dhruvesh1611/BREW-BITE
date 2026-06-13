@@ -16,8 +16,10 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import CoffeeLoader from "@/components/ui/CoffeeLoader";
+import { usePopup } from "@/context/PopupContext";
 
 export default function ProductsPage() {
+  const { showToast, showAlert, showConfirm } = usePopup();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -393,7 +395,7 @@ export default function ProductsPage() {
 
         if (!catResponse.ok) {
           const err = await catResponse.json();
-          alert(`Failed to create category: ${err.error || 'Unknown error'}`);
+          showAlert(`Failed to create category: ${err.error || 'Unknown error'}`, "Category Creation", "error");
           return;
         }
 
@@ -440,19 +442,21 @@ export default function ProductsPage() {
         fetchProducts();
         setShowAddModal(false);
         setEditingProduct(null);
+        showToast("Product saved successfully!", "success");
       } else {
         const err = await response.json();
         console.error("Backend Error:", err);
-        alert(`Failed to save product: ${err.error || 'Unknown error'}`);
+        showAlert(`Failed to save product: ${err.error || 'Unknown error'}`, "Save Product", "error");
       }
     } catch (error) {
       console.error('Failed to save product:', error);
-      alert(`Failed to save product: ${error.message}`);
+      showAlert(`Failed to save product: ${error.message}`, "Save Product", "error");
     }
   };
 
   const handleDeleteProduct = async (id) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    const confirmed = await showConfirm('Are you sure you want to delete this product?', 'Delete Product');
+    if (!confirmed) return;
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
@@ -464,15 +468,20 @@ export default function ProductsPage() {
       });
 
       if (response.ok) {
+        showToast("Product deleted successfully!", "success");
         fetchProducts();
       } else {
         const err = await response.json();
         console.error("Backend Error:", err);
-        alert(`Failed to delete product: ${err.error || 'Unknown error'}\n\n(Note: You cannot delete products that are part of existing orders.)`);
+        showAlert(
+          `Failed to delete product: ${err.error || 'Unknown error'}\n\n(Note: You cannot delete products that are part of existing orders.)`,
+          "Delete Product",
+          "error"
+        );
       }
     } catch (error) {
       console.error('Failed to delete product:', error);
-      alert(`Failed to delete product: ${error.message}`);
+      showAlert(`Failed to delete product: ${error.message}`, "Delete Product", "error");
     }
   };
 
