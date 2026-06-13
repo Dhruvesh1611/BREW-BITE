@@ -461,7 +461,7 @@ function UserModal({ user, onClose, onSave }) {
   const [data, setData] = useState({
     name: user?.name || "",
     email: user?.email || "",
-    role: user?.role || "CASHIER",
+    role: user?.role || "EMPLOYEE",
     password: ""
   });
 
@@ -481,7 +481,7 @@ function UserModal({ user, onClose, onSave }) {
           <div>
             <label className="block text-sm font-bold text-gray-600 mb-1">Role</label>
             <select className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-coffee-600 outline-none bg-white" value={data.role} onChange={e => setData({ ...data, role: e.target.value })}>
-              <option value="CASHIER">Cashier</option>
+              <option value="EMPLOYEE">Cashier</option>
               <option value="KITCHEN">Kitchen</option>
               <option value="ADMIN">Admin</option>
             </select>

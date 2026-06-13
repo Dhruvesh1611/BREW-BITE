@@ -24,6 +24,7 @@ export default function LoginPage() {
       case 'KITCHEN':
         router.push("/kitchen");
         break;
+      case 'EMPLOYEE':
       case 'CASHIER':
         router.push("/pos/session");
         break;
