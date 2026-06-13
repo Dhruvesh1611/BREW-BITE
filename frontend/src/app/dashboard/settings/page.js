@@ -304,20 +304,63 @@ export default function SettingsPage() {
 
             {/* General */}
             {activeTab === "general" && (
-              <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-coffee-800">General Identity</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="label">Cafe Name</label>
-                    <input className="input-field" value={settings.cafeName || ""} onChange={e => setSettings({ ...settings, cafeName: e.target.value })} />
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-4 border-b border-[#F3EEE2] pb-6">
+                  <div className="h-14 w-14 rounded-2xl bg-[#F7F4EB] flex items-center justify-center border border-[#E4E0D1] shadow-sm">
+                    <SettingsIcon className="h-7 w-7 text-[#1A4D2E]" />
                   </div>
                   <div>
-                    <label className="label">Receipt Footer</label>
-                    <textarea className="input-field" rows={3} value={settings.receiptFooter || ""} onChange={e => setSettings({ ...settings, receiptFooter: e.target.value })} />
+                    <h3 className="text-2xl font-bold text-[#1A4D2E]">General Identity</h3>
+                    <p className="text-[#5F6F65] text-sm">Update your cafe's basic information and preferences.</p>
                   </div>
-                  <div>
-                    <label className="label">Currency Symbol</label>
-                    <input className="input-field w-32" value={settings.currency || ""} onChange={e => setSettings({ ...settings, currency: e.target.value })} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div className="group">
+                      <label className="flex items-center gap-2 text-sm font-bold text-[#1A4D2E] mb-2 group-focus-within:text-[#175236] transition-colors">
+                        <Monitor className="h-4 w-4" />
+                        Cafe Name
+                      </label>
+                      <input 
+                        className="w-full px-5 py-4 rounded-[20px] border-2 border-[#EFE8D8] bg-[#FDFCF7] focus:border-[#1A4D2E] focus:bg-white focus:outline-none transition-all shadow-sm placeholder-[#A39E8D]"
+                        placeholder="e.g. Odoo Cafe"
+                        value={settings.cafeName || ""} 
+                        onChange={e => setSettings({ ...settings, cafeName: e.target.value })} 
+                      />
+                      <p className="mt-2 text-[11px] text-[#8C8775] px-1 font-medium italic">This name will appear on your dashboard and customer receipts.</p>
+                    </div>
+
+                    <div className="group">
+                      <label className="flex items-center gap-2 text-sm font-bold text-[#1A4D2E] mb-2">
+                        <span className="text-lg">₹</span>
+                        Currency Symbol
+                      </label>
+                      <input 
+                        className="w-32 px-5 py-4 rounded-[20px] border-2 border-[#EFE8D8] bg-[#FDFCF7] focus:border-[#1A4D2E] focus:bg-white focus:outline-none transition-all shadow-sm text-center font-bold text-lg"
+                        placeholder="₹"
+                        value={settings.currency || ""} 
+                        onChange={e => setSettings({ ...settings, currency: e.target.value })} 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="group">
+                    <label className="flex items-center gap-2 text-sm font-bold text-[#1A4D2E] mb-2">
+                      <List className="h-4 w-4" />
+                      Receipt Footer Message
+                    </label>
+                    <textarea 
+                      className="w-full px-5 py-4 rounded-[24px] border-2 border-[#EFE8D8] bg-[#FDFCF7] focus:border-[#1A4D2E] focus:bg-white focus:outline-none transition-all shadow-sm min-h-[160px] resize-none"
+                      placeholder="e.g. Thank you for visiting! Please visit again."
+                      rows={5} 
+                      value={settings.receiptFooter || ""} 
+                      onChange={e => setSettings({ ...settings, receiptFooter: e.target.value })} 
+                    />
+                    <div className="flex justify-between mt-2 px-1">
+                      <p className="text-[11px] text-[#8C8775] font-medium italic">A personal note for your customers at the end of their bill.</p>
+                      <p className="text-[10px] font-bold text-[#1A4D2E]/40 uppercase tracking-widest">{settings.receiptFooter?.length || 0}/200</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -454,44 +497,141 @@ export default function SettingsPage() {
 
             {/* Payments */}
             {activeTab === "payments" && (
-              <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-coffee-800">Payment Configuration</h3>
-                <div className="space-y-3">
-                  <label className="toggle-card">
-                    <div className="flex items-center gap-3">
-                      <div className="icon-box">💵</div>
-                      <div>
-                        <p className="font-bold">Cash</p>
-                        <p className="text-sm text-gray-500">Physical currency</p>
-                      </div>
-                    </div>
-                    <input type="checkbox" checked={settings.cashEnabled} onChange={e => setSettings({ ...settings, cashEnabled: e.target.checked })} className="toggle" />
-                  </label>
-                  <label className="toggle-card">
-                    <div className="flex items-center gap-3">
-                      <div className="icon-box"><CreditCard className="h-5 w-5" /></div>
-                      <div>
-                        <p className="font-bold">Card</p>
-                        <p className="text-sm text-gray-500">Credit/Debit terminals</p>
-                      </div>
-                    </div>
-                    <input type="checkbox" checked={settings.digitalEnabled} onChange={e => setSettings({ ...settings, digitalEnabled: e.target.checked })} className="toggle" />
-                  </label>
-                  <label className="toggle-card">
-                    <div className="flex items-center gap-3">
-                      <div className="icon-box">📱</div>
-                      <div>
-                        <p className="font-bold">UPI</p>
-                        <p className="text-sm text-gray-500">QR Code payments</p>
-                      </div>
-                    </div>
-                    <input type="checkbox" checked={settings.upiEnabled} onChange={e => setSettings({ ...settings, upiEnabled: e.target.checked })} className="toggle" />
-                  </label>
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-4 border-b border-[#F3EEE2] pb-6">
+                  <div className="h-14 w-14 rounded-2xl bg-[#F7F4EB] flex items-center justify-center border border-[#E4E0D1] shadow-sm">
+                    <CreditCard className="h-7 w-7 text-[#1A4D2E]" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-[#1A4D2E]">Payment Configuration</h3>
+                    <p className="text-[#5F6F65] text-sm">Manage how your customers can pay for their orders.</p>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Cash Method */}
+                  <div 
+                    onClick={() => setSettings({ ...settings, cashEnabled: !settings.cashEnabled })}
+                    className={`relative overflow-hidden cursor-pointer group p-6 rounded-[28px] border-2 transition-all duration-300 ${
+                      settings.cashEnabled 
+                        ? "border-[#1A4D2E] bg-[#F7FBF9] shadow-[0_15px_35px_rgba(26,77,46,0.1)]" 
+                        : "border-[#EFE8D8] bg-white hover:border-[#D1C9B0] grayscale"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-4 relative z-10">
+                      <div className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-colors ${
+                        settings.cashEnabled ? "bg-[#1A4D2E] text-white" : "bg-[#F3EEE2] text-[#8C8775]"
+                      }`}>
+                        <span className="text-2xl">💵</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-bold text-[#1A4D2E]">Cash Payment</h4>
+                          <div className={`h-5 w-10 rounded-full flex items-center px-1 transition-colors ${
+                            settings.cashEnabled ? "bg-[#1A4D2E]" : "bg-[#D1C9B0]"
+                          }`}>
+                            <div className={`h-3 w-3 rounded-full bg-white transition-transform ${
+                              settings.cashEnabled ? "translate-x-5" : "translate-x-0"
+                            }`} />
+                          </div>
+                        </div>
+                        <p className="text-[11px] font-medium text-[#5F6F65] leading-relaxed">Accept physical currency directly at the counter.</p>
+                      </div>
+                    </div>
+                    {settings.cashEnabled && (
+                      <div className="absolute -right-4 -bottom-4 h-24 w-24 bg-[#1A4D2E]/5 rounded-full blur-2xl" />
+                    )}
+                  </div>
+
+                  {/* Card Method */}
+                  <div 
+                    onClick={() => setSettings({ ...settings, digitalEnabled: !settings.digitalEnabled })}
+                    className={`relative overflow-hidden cursor-pointer group p-6 rounded-[28px] border-2 transition-all duration-300 ${
+                      settings.digitalEnabled 
+                        ? "border-[#1A4D2E] bg-[#F7FBF9] shadow-[0_15px_35px_rgba(26,77,46,0.1)]" 
+                        : "border-[#EFE8D8] bg-white hover:border-[#D1C9B0] grayscale"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-4 relative z-10">
+                      <div className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-colors ${
+                        settings.digitalEnabled ? "bg-[#1A4D2E] text-white" : "bg-[#F3EEE2] text-[#8C8775]"
+                      }`}>
+                        <CreditCard className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-bold text-[#1A4D2E]">Card / POS</h4>
+                          <div className={`h-5 w-10 rounded-full flex items-center px-1 transition-colors ${
+                            settings.digitalEnabled ? "bg-[#1A4D2E]" : "bg-[#D1C9B0]"
+                          }`}>
+                            <div className={`h-3 w-3 rounded-full bg-white transition-transform ${
+                              settings.digitalEnabled ? "translate-x-5" : "translate-x-0"
+                            }`} />
+                          </div>
+                        </div>
+                        <p className="text-[11px] font-medium text-[#5F6F65] leading-relaxed">Enable card swipes via external machine or integrated POS.</p>
+                      </div>
+                    </div>
+                    {settings.digitalEnabled && (
+                      <div className="absolute -right-4 -bottom-4 h-24 w-24 bg-[#1A4D2E]/5 rounded-full blur-2xl" />
+                    )}
+                  </div>
+
+                  {/* UPI Method */}
+                  <div 
+                    onClick={() => setSettings({ ...settings, upiEnabled: !settings.upiEnabled })}
+                    className={`relative overflow-hidden cursor-pointer group p-6 rounded-[28px] border-2 transition-all duration-300 ${
+                      settings.upiEnabled 
+                        ? "border-[#1A4D2E] bg-[#F7FBF9] shadow-[0_15px_35px_rgba(26,77,46,0.1)]" 
+                        : "border-[#EFE8D8] bg-white hover:border-[#D1C9B0] grayscale"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-4 relative z-10">
+                      <div className={`h-12 w-12 rounded-2xl flex items-center justify-center transition-colors ${
+                        settings.upiEnabled ? "bg-[#1A4D2E] text-white" : "bg-[#F3EEE2] text-[#8C8775]"
+                      }`}>
+                        <span className="text-2xl">📱</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-bold text-[#1A4D2E]">UPI / QR</h4>
+                          <div className={`h-5 w-10 rounded-full flex items-center px-1 transition-colors ${
+                            settings.upiEnabled ? "bg-[#1A4D2E]" : "bg-[#D1C9B0]"
+                          }`}>
+                            <div className={`h-3 w-3 rounded-full bg-white transition-transform ${
+                              settings.upiEnabled ? "translate-x-5" : "translate-x-0"
+                            }`} />
+                          </div>
+                        </div>
+                        <p className="text-[11px] font-medium text-[#5F6F65] leading-relaxed">Customers can scan QR to pay via any UPI app (PhonePe, GPay, etc.)</p>
+                      </div>
+                    </div>
+                    {settings.upiEnabled && (
+                      <div className="absolute -right-4 -bottom-4 h-24 w-24 bg-[#1A4D2E]/5 rounded-full blur-2xl" />
+                    )}
+                  </div>
+                </div>
+
                 {settings.upiEnabled && (
-                  <div className="pt-4 border-t border-gray-100">
-                    <label className="label">Default UPI ID</label>
-                    <input className="input-field" placeholder="merchant@upi" value={settings.upiId || ""} onChange={e => setSettings({ ...settings, upiId: e.target.value })} />
+                  <div className="p-8 rounded-[32px] border-2 border-dashed border-[#E4E0D1] bg-[#FDFCF7] animate-in zoom-in-95 duration-300">
+                    <div className="max-w-md">
+                      <label className="flex items-center gap-2 text-sm font-bold text-[#1A4D2E] mb-3">
+                        <span className="h-6 w-6 rounded-lg bg-[#1A4D2E] text-white flex items-center justify-center text-[10px]">QR</span>
+                        Default Merchant UPI ID
+                      </label>
+                      <div className="relative">
+                        <input 
+                          className="w-full px-6 py-4 rounded-2xl border-2 border-[#EFE8D8] focus:border-[#1A4D2E] focus:outline-none bg-white font-mono text-sm tracking-wider" 
+                          placeholder="merchant@upi" 
+                          value={settings.upiId || ""} 
+                          onChange={e => setSettings({ ...settings, upiId: e.target.value })} 
+                        />
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                           {settings.upiId && <Check className="h-4 w-4 text-[#1A4D2E]" />}
+                        </div>
+                      </div>
+                      <p className="mt-3 text-[11px] text-[#8C8775] font-medium">This ID will be used to generate dynamic QR codes for customers at checkout.</p>
+                    </div>
                   </div>
                 )}
               </div>
