@@ -3,6 +3,7 @@ import "./globals.css";
 
 import { AuthProvider } from "@/stores/auth-store";
 import { CartProvider } from "@/stores/cart-store";
+import { PopupProvider } from "@/context/PopupContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -25,11 +26,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
-        </AuthProvider>
+        <PopupProvider>
+          <AuthProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </AuthProvider>
+        </PopupProvider>
       </body>
     </html>
   );

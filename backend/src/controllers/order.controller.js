@@ -80,6 +80,26 @@ exports.createOrder = async (req, res) => {
       }
     }
 
+    // Verify that the table exists in database if a tableId is supplied
+    if (finalTableId) {
+      const tableExists = await prisma.table.findUnique({
+        where: { id: finalTableId }
+      });
+      if (!tableExists) {
+        return res.status(400).json({ error: "INVALID_TABLE", message: "The selected table does not exist or has been deleted." });
+      }
+    }
+
+    // Verify that the POS session exists in database if sessionId is supplied
+    if (sessionId) {
+      const sessionExists = await prisma.session.findUnique({
+        where: { id: sessionId }
+      });
+      if (!sessionExists) {
+        return res.status(400).json({ error: "INVALID_SESSION", message: "The active POS session does not exist." });
+      }
+    }
+
     // Fetch products to calculate prices, taxes and variants
     const productIds = items.map(i => i.productId);
     const products = await prisma.product.findMany({
@@ -88,6 +108,13 @@ exports.createOrder = async (req, res) => {
     });
 
     const productMap = new Map(products.map(p => [p.id, p]));
+
+    // Verify all products exist
+    for (const item of items) {
+      if (!productMap.has(item.productId)) {
+        return res.status(400).json({ error: "PRODUCT_NOT_FOUND", message: `Product not found.` });
+      }
+    }
 
     let subtotal = 0;
     let taxAmount = 0;

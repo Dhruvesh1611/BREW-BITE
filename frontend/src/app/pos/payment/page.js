@@ -6,10 +6,12 @@ import { DollarSign, CreditCard, Smartphone, ArrowLeft, Check, AlertCircle } fro
 import CoffeeLoader from "@/components/ui/CoffeeLoader";
 import { useCartStore } from "@/stores/cart-store";
 import { getSocket } from "@/lib/socket";
+import { usePopup } from "@/context/PopupContext";
 
 
 export default function POSPaymentPage() {
   const { clearCart } = useCartStore();
+  const { showToast, showAlert, showConfirm } = usePopup();
   const [order, setOrder] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [amountReceived, setAmountReceived] = useState("");
@@ -56,8 +58,9 @@ export default function POSPaymentPage() {
   const fetchOrderDetails = async () => {
     const payingOrderId = localStorage.getItem('payingOrderId');
     if (!payingOrderId) {
-      alert("No active checkout order found");
-      window.location.href = '/pos/terminal';
+      showAlert("No active checkout order found", "Payment Process", "error").then(() => {
+        window.location.href = '/pos/terminal';
+      });
       return;
     }
 
@@ -76,12 +79,13 @@ export default function POSPaymentPage() {
           setWhatsappNumber(data.customerMobile);
         }
       } else {
-        alert("Failed to load order details");
-        window.location.href = '/pos/terminal';
+        showAlert("Failed to load order details", "Payment Process", "error").then(() => {
+          window.location.href = '/pos/terminal';
+        });
       }
     } catch (error) {
       console.error("Failed to load order details:", error);
-      alert("Error loading order context");
+      showAlert("Error loading order context", "Payment Process", "error");
     } finally {
       setLoading(false);
     }
@@ -138,7 +142,7 @@ export default function POSPaymentPage() {
       }
     } catch (e) {
       console.error(e);
-      alert(e.message);
+      showAlert(e.message, "Cash Payment", "error");
       setProcessing(false);
     }
   };
@@ -173,7 +177,13 @@ export default function POSPaymentPage() {
 
       // Check for mock Razorpay credentials or fallback order
       if (rzOrder.id.startsWith('order_mock_') || rzOrder.key === 'rzp_test_placeholder' || rzOrder.key.includes('mockkey')) {
-        const simulateSuccess = confirm("Razorpay Simulator: Real Razorpay keys are not configured in your backend .env.\n\nWould you like to simulate a successful payment validation for this order?");
+        const simulateSuccess = await showConfirm(
+          "Real Razorpay keys are not configured in your backend .env.\n\nWould you like to simulate a successful payment validation for this order?",
+          "Razorpay Simulator",
+          "info",
+          "Simulate Success",
+          "Cancel"
+        );
         if (simulateSuccess) {
           try {
             const verifyRes = await fetch(`${API_URL}/payments/razorpay/verify`, {
@@ -185,7 +195,7 @@ export default function POSPaymentPage() {
               body: JSON.stringify({
                 orderId: order.id,
                 razorpay_order_id: rzOrder.id,
-                razorpay_payment_id: `pay_mock_${Math.random().toString(36).substr(2, 9)}`,
+                razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 11)}`,
                 razorpay_signature: "mock_signature"
               })
             });
@@ -206,7 +216,7 @@ export default function POSPaymentPage() {
               throw new Error(verifyErr.error || "Payment verification failed");
             }
           } catch (verifyError) {
-            alert(verifyError.message);
+            showAlert(verifyError.message, "Payment Verification", "error");
             setProcessing(false);
           }
         } else {
@@ -258,7 +268,7 @@ export default function POSPaymentPage() {
               throw new Error(verifyErr.error || "Payment verification failed");
             }
           } catch (verifyError) {
-            alert(verifyError.message);
+            showAlert(verifyError.message, "Payment Verification", "error");
             setProcessing(false);
           }
         },
@@ -281,7 +291,7 @@ export default function POSPaymentPage() {
       rzp.open();
     } catch (e) {
       console.error(e);
-      alert(e.message);
+      showAlert(e.message, "Razorpay Payment", "error");
       setProcessing(false);
     }
   };
@@ -308,7 +318,7 @@ export default function POSPaymentPage() {
       setProcessing(false);
 
       if (res.ok) {
-        alert("Receipt sent successfully via automated local WhatsApp!");
+        showToast("Receipt sent successfully via automated local WhatsApp!", "success");
         return;
       }
 
@@ -316,7 +326,7 @@ export default function POSPaymentPage() {
       console.warn("Automated WhatsApp failed:", errData);
       
       // Fallback redirect to WhatsApp Web
-      alert("Local automated WhatsApp is not connected. Redirecting to WhatsApp Web instead...");
+      showToast("Local WhatsApp is not connected. Redirecting to WhatsApp Web...", "warning");
       triggerWhatsappWebFallback();
     } catch (err) {
       console.error("WhatsApp API error:", err);

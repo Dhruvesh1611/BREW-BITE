@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { Settings as SettingsIcon, Users, Monitor, CreditCard, List, Save, Plus, Trash2, Edit2, X, Check, MapPin } from "lucide-react";
 import CoffeeLoader from "@/components/ui/CoffeeLoader";
+import { usePopup } from "@/context/PopupContext";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const { showToast, showAlert, showConfirm } = usePopup();
 
   // Data States
   const [settings, setSettings] = useState({
@@ -84,11 +86,11 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        alert("Settings saved successfully!");
+        showToast("Settings saved successfully!", "success");
       }
     } catch (error) {
       console.error("Save failed:", error);
-      alert("Failed to save settings");
+      showAlert("Failed to save settings", "Save Settings", "error");
     } finally {
       setSaving(false);
     }
@@ -116,16 +118,18 @@ export default function SettingsPage() {
         setEditingUser(null);
       } else {
         const err = await res.json();
-        alert(err.error);
+        showAlert(err.error, "User Settings", "error");
       }
-    } catch (e) { alert(e.message); }
+    } catch (e) { showAlert(e.message, "User Settings", "error"); }
   };
 
   const handleDeleteUser = async (id) => {
-    if (!confirm("Delete this user?")) return;
+    const confirmed = await showConfirm("Are you sure you want to delete this user?", "Delete User");
+    if (!confirmed) return;
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
     const token = localStorage.getItem('token');
     await fetch(`${API_URL}/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    showToast("User deleted successfully", "success");
     fetchData();
   };
 
@@ -142,15 +146,18 @@ export default function SettingsPage() {
       if (res.ok) {
         fetchData();
         setShowTerminalModal(false);
+        showToast("Terminal created successfully", "success");
       }
-    } catch (e) { alert(e.message); }
+    } catch (e) { showAlert(e.message, "Terminal Settings", "error"); }
   };
 
   const handleDeleteTerminal = async (id) => {
-    if (!confirm("Delete this terminal?")) return;
+    const confirmed = await showConfirm("Are you sure you want to delete this terminal?", "Delete Terminal");
+    if (!confirmed) return;
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
     const token = localStorage.getItem('token');
     await fetch(`${API_URL}/terminals/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    showToast("Terminal deleted successfully", "success");
     fetchData();
   };
 
@@ -167,19 +174,22 @@ export default function SettingsPage() {
       if (res.ok) {
         fetchData();
         setShowCategoryModal(false);
+        showToast("Category created successfully", "success");
       }
-    } catch (e) { alert(e.message); }
+    } catch (e) { showAlert(e.message, "Category Settings", "error"); }
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!confirm("Delete this category?")) return;
+    const confirmed = await showConfirm("Are you sure you want to delete this category?", "Delete Category");
+    if (!confirmed) return;
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
     const token = localStorage.getItem('token');
     const res = await fetch(`${API_URL}/products/categories/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
     if (!res.ok) {
       const err = await res.json();
-      alert(err.error || "Failed to delete category");
+      showAlert(err.error || "Failed to delete category", "Category Settings", "error");
     } else {
+      showToast("Category deleted successfully", "success");
       fetchData();
     }
   };
@@ -197,15 +207,18 @@ export default function SettingsPage() {
       if (res.ok) {
         fetchData();
         setShowFloorModal(false);
+        showToast("Floor created successfully", "success");
       }
-    } catch (e) { alert(e.message); }
+    } catch (e) { showAlert(e.message, "Floor Settings", "error"); }
   };
 
   const handleDeleteFloor = async (id) => {
-    if (!confirm("Delete this floor and all its tables?")) return;
+    const confirmed = await showConfirm("Are you sure you want to delete this floor and all its tables?", "Delete Floor");
+    if (!confirmed) return;
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
     const token = localStorage.getItem('token');
     await fetch(`${API_URL}/floors/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    showToast("Floor deleted successfully", "success");
     fetchData();
   };
 
@@ -223,15 +236,18 @@ export default function SettingsPage() {
         fetchData();
         setShowTableModal(false);
         setSelectedFloorForTable(null);
+        showToast("Table created successfully", "success");
       }
-    } catch (e) { alert(e.message); }
+    } catch (e) { showAlert(e.message, "Table Settings", "error"); }
   };
 
   const handleDeleteTable = async (id) => {
-    if (!confirm("Delete this table?")) return;
+    const confirmed = await showConfirm("Are you sure you want to delete this table?", "Delete Table");
+    if (!confirmed) return;
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
     const token = localStorage.getItem('token');
     await fetch(`${API_URL}/tables/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    showToast("Table deleted successfully", "success");
     fetchData();
   };
 

@@ -7,21 +7,14 @@ import { ChefHat, Clock, CheckCircle, LogOut, Flame, Package, Bell, RefreshCw, A
 import { useAuthStore } from "@/stores/auth-store";
 import CoffeeLoader from "@/components/ui/CoffeeLoader";
 import { getSocket } from "@/lib/socket";
+import { usePopup } from "@/context/PopupContext";
 
 export default function KitchenPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastError, setLastError] = useState(null);
   const { logout } = useAuthStore();
-  const [notifications, setNotifications] = useState([]);
-
-  const showToastNotification = (message) => {
-    const id = Date.now();
-    setNotifications(prev => [...prev, { id, message }]);
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    }, 5000);
-  };
+  const { showToast, showAlert } = usePopup();
 
   const fetchOrders = async () => {
     setLastError(null);
@@ -71,7 +64,7 @@ export default function KitchenPage() {
         if (prevOrders.some(o => o.id === newOrder.id)) return prevOrders;
         return [...prevOrders, newOrder];
       });
-      showToastNotification(`🔔 New Order #${newOrder.orderNumber?.slice(-3) || 'POS'} sent to kitchen for ${newOrder.table ? newOrder.table.name : 'Takeaway'}!`);
+      showToast(`New Order #${newOrder.orderNumber?.slice(-3) || 'POS'} sent to kitchen for ${newOrder.table ? newOrder.table.name : 'Takeaway'}!`, 'info');
       
       try {
         const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav");
@@ -128,12 +121,13 @@ export default function KitchenPage() {
             order.id === orderId ? { ...order, status: newStatus } : order
           )
         );
+        showToast(`Order status updated to ${newStatus}`, "success");
       } else {
-        alert('Failed to update order status');
+        showAlert('Failed to update order status', 'Kitchen Status', 'error');
       }
     } catch (error) {
       console.error('Failed to update status:', error);
-      alert('Failed to update order status');
+      showAlert('Failed to update order status', 'Kitchen Status', 'error');
     }
   };
 
@@ -283,17 +277,7 @@ export default function KitchenPage() {
         </div>
       )}
 
-      {/* Notifications */}
-      <div className="fixed top-6 right-6 z-50 space-y-3 max-w-sm">
-        {notifications.map((n) => (
-          <div key={n.id} className="bg-[#1A4D2E] text-[#FEFCE8] p-4 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-[#FEFCE8]/20 animate-bounce">
-            <span className="font-bold text-sm">{n.message}</span>
-            <button onClick={() => setNotifications(prev => prev.filter(x => x.id !== n.id))} className="text-white/70 hover:text-white">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ))}
-      </div>
+      {/* Notifications are now managed by global PopupProvider */}
 
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.03)] border-b border-gray-100 z-20 px-8 py-5">

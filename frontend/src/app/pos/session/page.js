@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Coffee } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import CoffeeLoader from "@/components/ui/CoffeeLoader";
+import { usePopup } from "@/context/PopupContext";
 
 export default function POSSessionPage() {
   const [terminals, setTerminals] = useState([]);
@@ -13,6 +14,11 @@ export default function POSSessionPage() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [activeSession, setActiveSession] = useState(null);
   const { logout } = useAuthStore();
+  const { showToast, showAlert, showConfirm } = usePopup();
+
+  // Close session modal state
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [closingCash, setClosingCash] = useState("");
 
   useEffect(() => {
     checkActiveSession();
@@ -122,11 +128,15 @@ export default function POSSessionPage() {
         // Handle "Terminal already has an open session" specifically
         if (response.status === 400 && error.session) {
           const stuckSession = error.session;
-          const userChoice = confirm(
+          const userChoice = await showConfirm(
             `Terminal ${stuckSession.terminalId} is already open by you or another cashier.\n\n` +
             `ID: ${stuckSession.id}\n` +
             `Started: ${new Date(stuckSession.startAt).toLocaleString()}\n\n` +
-            `Do you want to RESUME this session? \n(Click Cancel to FORCE CLOSE it instead)`
+            `Do you want to RESUME this session? \n(Click Cancel to FORCE CLOSE it instead)`,
+            "Session Already Open",
+            "warning",
+            "Resume",
+            "Force Close"
           );
 
           if (userChoice) {
@@ -136,17 +146,24 @@ export default function POSSessionPage() {
             window.location.href = '/pos/terminal';
           } else {
             // Force close attempt
-            if(confirm("Are you sure you want to force close the stuck session? This will require opening a new one.")) {
+            const confirmClose = await showConfirm(
+              "Are you sure you want to force close the stuck session? This will require opening a new one.",
+              "Force Close Session",
+              "error",
+              "Force Close",
+              "Cancel"
+            );
+            if (confirmClose) {
                await forceCloseSession(stuckSession.id);
             }
           }
         } else {
-          alert(error.error || 'Failed to start session');
+          showAlert(error.error || 'Failed to start session', 'Open Session', 'error');
         }
       }
     } catch (error) {
       console.error('Session start error:', error);
-      alert('Failed to start session');
+      showAlert('Failed to start session', 'Open Session', 'error');
     } finally {
       setLoading(false);
     }
@@ -167,25 +184,28 @@ export default function POSSessionPage() {
       });
 
       if (response.ok) {
-        alert("Stuck session closed. You can now open a new session.");
+        showToast("Stuck session closed. You can now open a new session.", "success");
         // Clear local state just in case
         localStorage.removeItem('activeSession');
         setActiveSession(null);
         // Refresh terminals/state
         window.location.reload(); 
       } else {
-        alert("Failed to force close session.");
+        showAlert("Failed to force close session.", "Force Close Session", "error");
       }
     } catch (e) {
       console.error("Force close error", e);
-      alert("Error closing session");
+      showAlert("Error closing session", "Force Close Session", "error");
     }
   };
 
-  const handleCloseSession = async () => {
-    const closingCash = prompt("Enter closing cash amount:");
-    if (closingCash === null) return; // User cancelled
-    
+  const handleCloseSession = () => {
+    setClosingCash("");
+    setShowCloseModal(true);
+  };
+
+  const submitCloseSession = async () => {
+    setShowCloseModal(false);
     setLoading(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
@@ -205,15 +225,15 @@ export default function POSSessionPage() {
       if (response.ok) {
         localStorage.removeItem('activeSession');
         setActiveSession(null);
-        alert('Session closed successfully!');
+        showToast('Session closed successfully!', 'success');
         fetchTerminals();
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to close session');
+        showAlert(error.error || 'Failed to close session', 'Close Session', 'error');
       }
     } catch (error) {
       console.error('Session close error:', error);
-      alert('Failed to close session');
+      showAlert('Failed to close session', 'Close Session', 'error');
     } finally {
       setLoading(false);
     }
@@ -320,6 +340,48 @@ export default function POSSessionPage() {
           </button>
         </div>
       </div>
+
+      {/* Custom Close Session Modal */}
+      {showCloseModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-[#FAF9F6] rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 border border-coffee-200/50">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-black text-[#1A4D2E]">Close Session</h2>
+              <p className="text-[#5F6F65] mt-1">Enter the closing cash amount in the drawer.</p>
+            </div>
+
+            <div className="mb-6">
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#5F6F65] font-bold">₹</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={closingCash}
+                  onChange={(e) => setClosingCash(e.target.value)}
+                  placeholder="0.00"
+                  autoFocus
+                  className="w-full pl-10 pr-5 py-4 rounded-[2rem] bg-white border-2 border-[#E8F5E9] focus:border-[#1A4D2E] focus:outline-none transition-all font-bold text-[#1A4D2E]"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => setShowCloseModal(false)}
+                className="px-6 py-4 bg-[#FBFBF2] text-[#5F6F65] rounded-[2rem] font-bold hover:bg-gray-100 transition-colors border border-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitCloseSession}
+                className="px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-[2rem] font-bold transition-colors shadow-lg"
+              >
+                Close Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
