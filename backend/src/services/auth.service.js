@@ -25,6 +25,9 @@ function createError(statusCode, message) {
 function buildTokenPayload(user) {
   return {
     userId: user.id,
+    id: user.id,
+    name: user.name,
+    email: user.email,
     role: user.role,
     shopId: user.shopId,
   };
@@ -107,13 +110,20 @@ async function loginUser(payload) {
     throw createError(400, 'Invalid credentials');
   }
 
-  const updatedUser = await authRepository.touchLastLogin(user.id);
-  const token = signAccessToken(updatedUser);
+  let authenticatedUser = user;
+
+  try {
+    authenticatedUser = await authRepository.touchLastLogin(user.id);
+  } catch (error) {
+    console.warn('⚠️ Failed to update lastLogin during auth, continuing login:', error.message);
+  }
+
+  const token = signAccessToken(authenticatedUser);
 
   return {
     accessToken: token,
     token,
-    user: toPublicUser(updatedUser),
+    user: toPublicUser(authenticatedUser),
   };
 }
 

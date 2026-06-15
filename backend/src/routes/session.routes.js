@@ -6,6 +6,7 @@ const { authenticateToken } = require('../middlewares/auth.middleware');
 
 // Routes
 router.post('/open', authenticateToken, sessionController.openSession);
+router.post('/:id/close', authenticateToken, sessionController.closeSession);
 router.put('/:id/close', authenticateToken, sessionController.closeSession);
 router.get('/active', authenticateToken, sessionController.getActiveSession);
 router.get('/:id', authenticateToken, sessionController.getSession);
