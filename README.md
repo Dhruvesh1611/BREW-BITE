@@ -1,198 +1,100 @@
-# Odoo Cafe POS ☕️
-
 <div align="center">
-  <h3><strong>Developed by Team Eklavya</strong></h3>
-  <p>
-    👤 Dhruvesh Shyara <br />
-    👤 Mayank Dudhatra <br />
-    👤 Priy Mavani <br />
-    👤 Arjun Divraniya
-  </p>
+  <img src="frontend/public/brew_and_bite_logo.png" alt="Brew & Bite Logo" width="150"/>
+  <h1>Brew & Bite</h1>
+  <p><strong>A Premium Point-of-Sale & Café Management System</strong></p>
 </div>
 
-<p align="center">
-  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" /></a>
-  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" /></a>
-  <a href="https://github.com/pmndrs/zustand"><img src="https://img.shields.io/badge/Zustand-4A4A55?style=for-the-badge" alt="Zustand" /></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" /></a>
-  <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express.js-404D59?style=for-the-badge" alt="Express.js" /></a>
-  <a href="https://www.prisma.io/"><img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" alt="Prisma" /></a>
-</p>
+---
 
-## Project Overview
+Brew & Bite is a full-stack, real-time Point-of-Sale (POS) and restaurant management platform built specifically for modern cafés. It streamlines the entire workflow from taking orders at the register, managing tables, sending live tickets to the kitchen, and visualizing sales data on a beautiful admin dashboard.
 
-**Odoo Cafe POS** is a modern, decoupled Full-Stack web-based Restaurant Point-of-Sale (POS) system. Built for speed, reliability, and seamless restaurant operations, it leverages a robust JavaScript/TypeScript ecosystem to deliver a high-performance experience for admins, cashiers, and kitchen staff. 
+## ✨ Key Features
 
-Our system strictly adheres to the hackathon specification rules while introducing several key architectural optimizations to handle real-world edge cases like historical price compliance and concurrent table edits.
+- 🖥️ **Smart POS Terminal:** An intuitive, fast checkout interface for cashiers to manage carts, apply discounts, and process payments.
+- 🍳 **Live Kitchen Display System (KDS):** Real-time order synchronization using WebSockets. Kitchen staff see incoming orders instantly and can move them from "To Cook" -> "Preparing" -> "Completed".
+- 📊 **Analytics Dashboard:** A comprehensive admin view featuring revenue tracking, sales trends, top-selling products, and a busy-hours heatmap using interactive charts.
+- 🪑 **Table Management:** Support for both Dine-In (with visual table selection and status tracking) and Takeaway order flows.
+- 👥 **Role-Based Access Control:** Distinct interfaces and permissions for Admin, Cashier, and Kitchen staff.
+- 📥 **Export & Reporting:** Export filtered order data to CSV directly from the dashboard.
 
-## Key Features & Architecture
+## 🛠️ Tech Stack
 
-### 1. Authentication & Role-Based Access Control (RBAC)
-We implemented a secure authentication flow with strict Role-Based Access Control.
-- **Implemented Roles**: Full support for `Admin` and `Cashier` roles.
+### Frontend
+- **Framework:** Next.js 14 (App Router)
+- **Styling:** Tailwind CSS & Framer Motion for smooth animations
+- **State Management:** Zustand
+- **Icons:** Lucide React
+- **Charts:** MUI Charts & Nivo Heatmap
 
-> [!IMPORTANT]  
-> **Hackathon Extra/Optimization:** Instead of relying on an unprotected public URL route for the kitchen display, we introduced a third explicit database-level `KITCHEN` role. This ensures dedicated, secure access specifically for kitchen staff.
+### Backend
+- **Server:** Node.js & Express
+- **Database:** PostgreSQL
+- **ORM:** Prisma
+- **Real-time:** Socket.IO for live kitchen and order updates
+- **Authentication:** JWT (JSON Web Tokens)
 
-### 2. Core Backend Settings & Menu Configuration
-The backend serves as the central hub for managing the restaurant's offerings and operational settings.
-- **Product Management**: Comprehensive management of Products (Name, Description, Price, Unit, Tax, and availability status) and their relationships to Categories.
-- **Global Configuration**: Global toggle switches for payment methods including Cash, Digital, and Dynamic UPI QR code generation (with the ability to save custom UPI IDs).
+---
 
-> [!NOTE]  
-> **Hackathon Extra/Optimization:** We built a robust `Variant` model mapped to products. This allows for custom modifiers out-of-the-box (e.g., small/medium/large sizes, or extra toppings with an `extraPrice`), significantly enhancing menu flexibility.
-
-### 3. POS Terminal & Cart Workflows
-A seamless and reliable point-of-sale terminal designed for high-volume environments.
-- **Session Lifecycle**: Complete POS Terminal session lifecycle tracking, including `Open` and `Closed` session statuses, and tracking of initial opening cash and closing cash balances.
-- **Order States**: Orders transition seamlessly across `Draft`, `Paid`, and `Cancelled` states.
-
-> [!IMPORTANT]  
-> **Hackathon Extra/Optimization (Snapshot Safety):** The `OrderItem` table captures immutable snapshots of the `productName` and item `price` at the exact second of sale. This guarantees historic compliance; if an admin updates product menu details in the backend later, past receipts remain accurate.
-
-> [!IMPORTANT]  
-> **Hackathon Extra/Optimization (Concurrency Control):** We added built-in Optimistic Concurrency Control using an auto-incrementing `version` integer column. This stops cashiers from colliding on concurrent table edits, ensuring data integrity during busy shifts.
-
-### 4. Kitchen Display System (KDS)
-A real-time, responsive display system to keep the kitchen synchronized with the front-of-house.
-- **Workflow Tracking**: Fully responsive real-time workflow tracking (`Sent`, `Preparing`, `Completed`) mapped safely to kitchen tickets.
-- **Selective Filtering**: Products utilize a `sendToKitchen` boolean parameter. This ensures that drinks or raw items only stream to the screens where they are relevant, reducing kitchen clutter.
-
-> [!NOTE]  
-> **Hackathon Extra/Optimization:** **Micro-Tracking Capability.** Each separate `OrderItem` keeps its own active preparation status flag. This allows cooks to cross items off or strike through progress item-by-item, rather than only being able to clear whole orders at once.
-
-## Database Schema Deep-Dive
-
-Our database is managed using Prisma ORM. While compatible with PostgreSQL for production, it is currently configured with SQLite for effortless, portable local development.
-
-**Core Entities:**
-- `User`: Manages authentication credentials and RBAC (`Admin`, `Cashier`, `KITCHEN`).
-- `Session`: Tracks POS terminal sessions (opening/closing balances, status).
-- `Order`: Represents a customer transaction (status, totals, linked session/user).
-- `OrderItem`: Individual items within an order (includes snapshot pricing and item-level KDS status).
-- `Product`: The core menu item (details, `sendToKitchen` flag).
-- `Variant`: Custom modifiers for products (size, extra toppings, `extraPrice`).
-- `Category`: Groupings for products to organize the menu.
-- `Payment`: Records payment transactions linked to orders.
-- `Settings`: Global configuration (UPI IDs, accepted payment methods).
-
-## 🚀 Getting Started & Installation
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v18+ recommended)
-- npm or yarn
+- Node.js (v18+)
+- PostgreSQL installed and running
 
-### 1. Project Setup & Configuration
-Our repository is split into two main directories: `backend` for the Express API and `frontend` for the Next.js application.
+### Installation
 
-First, set up the environment variables for the backend.
-```bash
-cd backend
-cp .env.example .env
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Dhruvesh1611/BREW-BITE.git
+   cd BREW-BITE
+   ```
 
-Ensure your `backend/.env` file is populated. Here are the exact variables required:
-```env
-DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
-PORT=4001
-JWT_SECRET="your-strong-secret-key-here"
-NODE_ENV="development"
-CORS_ORIGIN="http://localhost:3000"
-EMAIL_USER=""
-EMAIL_PASS=""
-```
+2. **Backend Setup:**
+   ```bash
+   cd backend
+   npm install
+   ```
+   - Create a `.env` file in the `backend` directory based on `.env.example` (ensure you set your `DATABASE_URL`).
+   - Push the database schema and seed default data:
+     ```bash
+     npx prisma db push
+     node prisma/seed.js
+     ```
+   - Start the backend server:
+     ```bash
+     npm run dev
+     ```
 
-### 2. Database Migration & Seeding
-Navigate to the `backend` directory, install dependencies, run Prisma migrations to initialize the schema, and execute the seed script to populate mock products, tables, and roles.
-```bash
-# From the backend directory
-npm install
+3. **Frontend Setup:**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+   - Create a `.env.local` file in the `frontend` directory and set your API URL (e.g., `NEXT_PUBLIC_API_URL=http://localhost:4001/api`).
+   - Start the frontend server:
+     ```bash
+     npm run dev
+     ```
 
-# Run database migrations
-npx prisma migrate dev
+4. **Access the App:**
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-# Run the seed file to populate mock data
-npm run seed
-```
+---
 
-### 3. Running the Applications
-Open two terminal windows to run both servers concurrently.
+## 🔑 Demo Accounts
 
-**Backend (Express):**
-```bash
-cd backend
-npm run dev
-# Server will start at http://localhost:4001
-```
+If you seeded the database using the provided seed script, you can log in with the following default accounts to test different roles:
 
-**Frontend (Next.js):**
-```bash
-cd frontend
-npm install
-npm run dev
-# App will start at http://localhost:3000
-```
+- **Admin Dashboard:** `admin@brew-and-bite.com` | `password123`
+- **Cashier (POS):** `jagjeet@brew-and-bite.com` | `password123`
+- **Kitchen (KDS):** `gordon@brew-and-bite.com` | `password123`
 
-## 📡 API Endpoints Reference
+---
 
-Here is a comprehensive reference of our backend API routes:
+## 🤝 Contributing
 
-| HTTP Method | Endpoint | Description |
-|---|---|---|
-| **Auth** | | |
-| `POST` | `/api/auth/signup` | Register a new user |
-| `POST` | `/api/auth/login` | Authenticate and receive JWT |
-| `GET` | `/api/auth/me` | Get current authenticated user profile |
-| **Users** | | |
-| `GET` | `/api/users` | List all users |
-| `POST` | `/api/users` | Create a new user |
-| `PUT` | `/api/users/:id` | Update an existing user |
-| `DELETE` | `/api/users/:id` | Delete a user |
-| **Products & Categories** | | |
-| `GET` | `/api/products` | Get all products |
-| `POST` | `/api/products` | Create a new product (Admin) |
-| `PUT` | `/api/products/:id` | Update a product (Admin) |
-| `DELETE` | `/api/products/:id` | Delete a product (Admin) |
-| `GET` | `/api/products/categories` | Get all categories |
-| `POST` | `/api/products/categories` | Create a new category (Admin) |
-| `DELETE` | `/api/products/categories/:id` | Delete a category (Admin) |
-| **Orders** | | |
-| `GET` | `/api/orders` | Get list of orders |
-| `POST` | `/api/orders` | Create a new order |
-| `GET` | `/api/orders/:id` | Get details of a specific order |
-| `PUT` | `/api/orders/:id/status` | Update order status |
-| `POST` | `/api/orders/:id/pay` | Process payment for an order |
-| `POST` | `/api/orders/:id/email` | Send order receipt via email |
-| **Sessions & Terminals** | | |
-| `GET` | `/api/sessions/active` | Get the currently active session |
-| `GET` | `/api/sessions/:id` | Get session details |
-| `POST` | `/api/sessions/open` | Open a new POS session |
-| `PUT` | `/api/sessions/:id/close` | Close an active POS session |
-| `GET` | `/api/terminals` | List all POS terminals |
-| `POST` | `/api/terminals` | Create a new terminal (Admin) |
-| `DELETE` | `/api/terminals/:id` | Delete a terminal (Admin) |
-| **Kitchen KDS** | | |
-| `GET` | `/api/kitchen/active` | Get active kitchen orders (Kitchen/Admin) |
-| `PUT` | `/api/kitchen/:id/status` | Update kitchen item status (Kitchen/Admin) |
-| **Floors & Tables** | | |
-| `GET` | `/api/floors` | Get all floors and tables |
-| `POST` | `/api/floors` | Create a new floor (Admin) |
-| `POST` | `/api/floors/:id/tables` | Add a table to a floor (Admin) |
-| `PUT` | `/api/tables/:id` | Update a table (Admin) |
-| `DELETE` | `/api/tables/:id` | Delete a table (Admin) |
-| **Dashboard & Settings** | | |
-| `GET` | `/api/dashboard/stats` | Get high-level dashboard statistics |
-| `GET` | `/api/dashboard/recent-orders` | Get recently placed orders |
-| `GET` | `/api/dashboard/sales-chart` | Get sales chart data |
-| `GET` | `/api/dashboard/sales-trends` | Get sales trend data |
-| `GET` | `/api/dashboard/top-products` | Get top-selling products |
-| `GET` | `/api/dashboard/heatmap-data` | Get sales heatmap data |
-| `GET` | `/api/settings` | Get global system settings |
-| `PUT` | `/api/settings` | Update global settings (Admin) |
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Dhruvesh1611/BREW-BITE/issues) if you want to contribute.
 
-## Roadmap (Sprint V2)
+## 📝 License
 
-We are continuously improving Odoo Cafe POS. The following features are planned for our upcoming Sprint V2:
-
-- **Coupons & Promotion Engines**: A comprehensive system to manage discounts, promotional codes, and automated offers.
-- **Dynamic UI Category Colors**: An automatic UI feature to color-code categories, making navigation even faster for cashiers.
+This project is licensed under the MIT License.
