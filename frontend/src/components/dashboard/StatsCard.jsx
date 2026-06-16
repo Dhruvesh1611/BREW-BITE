@@ -1,6 +1,6 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
 
-export default function StatsCard({ title, value, icon: Icon, trend = "12.5%", trendUp = true }) {
+export default function StatsCard({ title, value, icon: Icon, trend = null, trendUp = true, trendLabel = "vs previous" }) {
   // Default to coffee/brown theme to match the app aesthetic
   let iconBg = "bg-[#F5EFE6]";
   let iconColor = "text-[#6B4423]";
@@ -16,11 +16,28 @@ export default function StatsCard({ title, value, icon: Icon, trend = "12.5%", t
     sparklineGradientEnd = "rgba(140, 135, 117, 0)";
   }
 
-  // Generate a smooth sparkline path
-  const pathData = trendUp 
-    ? "M0 25 C20 25, 40 22, 60 18 C80 14, 90 5, 100 5"
-    : "M0 5 C20 5, 40 8, 60 12 C80 16, 90 25, 100 25";
-    
+  // Deterministic random number generator based on title
+  const getPath = (title, isUp) => {
+    const hash = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const rand = (i) => {
+      const x = Math.sin(hash + i) * 10000;
+      return x - Math.floor(x);
+    };
+
+    // Start y and End y based on trend (0 is top, 30 is bottom)
+    const y0 = isUp ? 22 + rand(1) * 6 : 4 + rand(1) * 6;
+    const y3 = isUp ? 4 + rand(2) * 6 : 22 + rand(2) * 6;
+
+    // Intermediate points with some noise
+    const y1 = y0 - (y0 - y3) * 0.33 + (rand(3) - 0.5) * 12;
+    const y2 = y0 - (y0 - y3) * 0.66 + (rand(4) - 0.5) * 12;
+
+    const c = (y) => Math.max(2, Math.min(28, y));
+
+    return `M 0 ${c(y0)} C 15 ${c(y0)}, 15 ${c(y1)}, 33 ${c(y1)} C 50 ${c(y1)}, 50 ${c(y2)}, 66 ${c(y2)} C 83 ${c(y2)}, 83 ${c(y3)}, 100 ${c(y3)}`;
+  };
+
+  const pathData = getPath(title, trendUp);
   const fillPathData = `${pathData} L100 30 L0 30 Z`;
 
   return (
@@ -38,17 +55,19 @@ export default function StatsCard({ title, value, icon: Icon, trend = "12.5%", t
             {value}
           </h3>
           
-          <div className="flex items-center gap-1.5 mt-2.5">
-            {trendUp ? (
-              <TrendingUp className="h-[14px] w-[14px] text-[#22C55E]" strokeWidth={3} />
-            ) : (
-              <TrendingDown className="h-[14px] w-[14px] text-red-500" strokeWidth={3} />
-            )}
-            <span className={`text-[12px] font-bold ${trendUp ? "text-[#22C55E]" : "text-red-500"}`}>
-              {trend}
-            </span>
-            <span className="text-[12px] text-[#A8A396] font-medium">vs yesterday</span>
-          </div>
+          {trend && (
+            <div className="flex items-center gap-1.5 mt-2.5">
+              {trendUp ? (
+                <TrendingUp className="h-[14px] w-[14px] text-[#22C55E]" strokeWidth={3} />
+              ) : (
+                <TrendingDown className="h-[14px] w-[14px] text-red-500" strokeWidth={3} />
+              )}
+              <span className={`text-[12px] font-bold ${trendUp ? "text-[#22C55E]" : "text-red-500"}`}>
+                {trend}
+              </span>
+              <span className="text-[12px] text-[#A8A396] font-medium">{trendLabel}</span>
+            </div>
+          )}
         </div>
       </div>
 

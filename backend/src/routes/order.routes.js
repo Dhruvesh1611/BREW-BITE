@@ -6,6 +6,7 @@ const { authenticateToken } = require('../middlewares/auth.middleware');
 
 router.use(authenticateToken); // All order actions require login
 
+router.get('/stats', orderController.getOrderStats);
 router.post('/', orderController.createOrder);
 router.get('/', orderController.getOrders);
 router.get('/:id', orderController.getOrderById);

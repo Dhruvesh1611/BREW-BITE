@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
         <div className="relative z-10 max-w-xl text-[#FEFCE8] space-y-10">
           <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}>
             <div className="h-24 w-24 rounded-3xl bg-[#FEFCE8]/10 backdrop-blur-md flex items-center justify-center shadow-2xl border border-[#FEFCE8]/20">
-              <Image src="/odoo_cafe_logo.png" alt="logo" width={82} height={82} className="object-contain brightness-0 invert" />
+              <Image src="/brew_and_bite_logo.png" alt="logo" width={82} height={82} className="object-contain brightness-0 invert" />
             </div>
           </motion.div>
           <h2 className="text-6xl font-extrabold leading-[1.1] tracking-tight text-[#FEFCE8]">
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label className="text-sm font-bold text-[#1A4D2E] ml-1">Email address</label>
-              <Input {...register("email", { required: true })} type="email" placeholder="barista@odoocafe.com" className="mt-2 h-14 rounded-2xl border-gray-200 focus:border-[#1A4D2E] focus:ring-[#1A4D2E] bg-gray-50/50" />
+              <Input {...register("email", { required: true })} type="email" placeholder="barista@brewandbite.com" className="mt-2 h-14 rounded-2xl border-gray-200 focus:border-[#1A4D2E] focus:ring-[#1A4D2E] bg-gray-50/50" />
             </div>
 
             <Button type="submit" className="w-full h-14 text-lg font-bold rounded-2xl bg-[#1A4D2E] hover:bg-[#143d24] text-[#FEFCE8] shadow-lg hover:shadow-xl transition-all duration-300" disabled={isLoading}>

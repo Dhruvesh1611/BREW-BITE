@@ -25,7 +25,7 @@ async function main() {
   console.log('Creating Settings...');
   await prisma.settings.create({
     data: {
-      cafeName: 'Odoo Cafe Smart Point',
+      cafeName: 'Brew & Bite Smart Point',
       receiptFooter: 'Thank you for your visit!',
       currency: '₹',
       cashEnabled: true,
@@ -48,7 +48,7 @@ async function main() {
   // Create some staff
   const staff1 = await prisma.user.create({
     data: {
-      email: 'barista1@odoocafe.com',
+      email: 'barista1@brewandbite.com',
       password: hashedPassword,
       name: 'Alex Barista',
       role: 'EMPLOYEE',
@@ -57,7 +57,7 @@ async function main() {
   
   const staff2 = await prisma.user.create({
     data: {
-      email: 'kitchen1@odoocafe.com',
+      email: 'kitchen1@brewandbite.com',
       password: hashedPassword,
       name: 'Sam Chef',
       role: 'KITCHEN',
@@ -102,20 +102,20 @@ async function main() {
   const catCold = await prisma.category.create({ data: { name: 'Cold Beverages' } });
 
   const productsData = [
-    { name: 'Espresso', price: 150, categoryId: catCoffee.id, unit: 'cup' },
-    { name: 'Cappuccino', price: 220, categoryId: catCoffee.id, unit: 'cup' },
-    { name: 'Latte', price: 250, categoryId: catCoffee.id, unit: 'cup' },
-    { name: 'Mocha', price: 280, categoryId: catCoffee.id, unit: 'cup' },
-    { name: 'Americano', price: 180, categoryId: catCoffee.id, unit: 'cup' },
+    { name: 'Espresso', price: 150, categoryId: catCoffee.id, unit: 'cup', imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Cappuccino', price: 220, categoryId: catCoffee.id, unit: 'cup', imageUrl: 'https://images.unsplash.com/photo-1534778101976-62847782c213?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Latte', price: 250, categoryId: catCoffee.id, unit: 'cup', imageUrl: 'https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Mocha', price: 280, categoryId: catCoffee.id, unit: 'cup', imageUrl: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Americano', price: 180, categoryId: catCoffee.id, unit: 'cup', imageUrl: 'https://images.unsplash.com/photo-1551030173-122aabc4489c?q=80&w=600&auto=format&fit=crop' },
     
-    { name: 'Butter Croissant', price: 150, categoryId: catPastry.id, unit: 'pc' },
-    { name: 'Chocolate Muffin', price: 120, categoryId: catPastry.id, unit: 'pc' },
-    { name: 'Blueberry Cheesecake', price: 300, categoryId: catPastry.id, unit: 'slice' },
-    { name: 'Cinnamon Roll', price: 180, categoryId: catPastry.id, unit: 'pc' },
+    { name: 'Butter Croissant', price: 150, categoryId: catPastry.id, unit: 'pc', imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Chocolate Muffin', price: 120, categoryId: catPastry.id, unit: 'pc', imageUrl: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Blueberry Cheesecake', price: 300, categoryId: catPastry.id, unit: 'slice', imageUrl: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Cinnamon Roll', price: 180, categoryId: catPastry.id, unit: 'pc', imageUrl: 'https://images.unsplash.com/photo-1509365465985-25d11c17e812?q=80&w=600&auto=format&fit=crop' },
     
-    { name: 'Iced Latte', price: 280, categoryId: catCold.id, unit: 'glass' },
-    { name: 'Cold Brew', price: 250, categoryId: catCold.id, unit: 'glass' },
-    { name: 'Peach Iced Tea', price: 200, categoryId: catCold.id, unit: 'glass' }
+    { name: 'Iced Latte', price: 280, categoryId: catCold.id, unit: 'glass', imageUrl: 'https://images.unsplash.com/photo-1461023058943-0708e5215034?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Cold Brew', price: 250, categoryId: catCold.id, unit: 'glass', imageUrl: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?q=80&w=600&auto=format&fit=crop' },
+    { name: 'Peach Iced Tea', price: 200, categoryId: catCold.id, unit: 'glass', imageUrl: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?q=80&w=600&auto=format&fit=crop' }
   ];
 
   const products = [];
@@ -153,7 +153,7 @@ async function main() {
   ];
 
   const statusOptions = ['PAID', 'COMPLETED', 'PAID', 'PREPARING', 'CANCELLED'];
-  const numOrders = 150; // A lot of orders to fill charts
+  const numOrders = 80; // A lot of orders to fill charts
 
   let orderCount = 0;
   for (let i = 0; i < numOrders; i++) {

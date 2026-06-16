@@ -8,15 +8,15 @@ import { PopupProvider } from "@/context/PopupContext";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata = {
-  title: "Odoo Cafe POS | Smart Point-of-Sale for Cafés",
+  title: "Brew & Bite POS | Smart Point-of-Sale for Cafés",
   description: "Premium point-of-sale system designed for modern cafés — efficient, beautiful, and powerful. Manage orders, kitchen, payments, and analytics.",
   keywords: ["POS", "cafe", "restaurant", "point of sale", "order management", "kitchen display"],
   icons: {
-    icon: "/favicon.ico",
-    apple: "/odoo_cafe_logo.png",
+    icon: "/favicon.png",
+    apple: "/brew_and_bite_logo.png",
   },
   openGraph: {
-    title: "Odoo Cafe POS",
+    title: "Brew & Bite POS",
     description: "Smart POS System for Modern Cafés",
     type: "website",
   },

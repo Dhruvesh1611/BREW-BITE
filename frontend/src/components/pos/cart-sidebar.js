@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "@/stores/cart-store";
 import { Trash2, Minus, Plus, CreditCard, ChefHat, User, MapPin, Package, List } from "lucide-react";
 import { usePopup } from "@/context/PopupContext";
+import OrderTypeModal from "./OrderTypeModal";
 
 export default function CartSidebar({ onAddCustomer }) {
   const { cart, removeItem, addItem, decreaseQuantity, clearCart, customer, orderId, coupon } = useCartStore();
   const { showToast, showAlert } = usePopup();
   const [selectedTable, setSelectedTable] = useState(null);
   const [sending, setSending] = useState(false);
-  const [checkingOut, setCheckingOut] = useState(false);
+  const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+
+  const latestState = useRef({ cart, customer, orderId, coupon });
+  useEffect(() => {
+    latestState.current = { cart, customer, orderId, coupon };
+  }, [cart, customer, orderId, coupon]);
 
   useEffect(() => {
     const tableData = localStorage.getItem('selectedTable');
@@ -35,72 +42,39 @@ export default function CartSidebar({ onAddCustomer }) {
   const tax = getTax();
   const total = subtotal + tax;
 
-  const handleCheckout = async () => {
-    if (cart.length === 0) return;
-    if (!customer || !customer.name || !customer.email || !customer.mobile) {
-      showAlert(
-        "Please add customer details (Name, Email, and Mobile) in the sidebar or products page before proceeding.",
-        "Checkout Required Information",
-        "warning"
-      );
+  const handleGoToCart = async () => {
+    const { cart: currentCart, customer: currentCustomer } = latestState.current;
+    
+    if (currentCart.length === 0) return;
+
+    const isTakeawayExplicit = localStorage.getItem('isTakeaway') === 'true';
+    if (!selectedTable && !isTakeawayExplicit) {
+      setPendingAction('GOTO_CART');
+      setShowOrderTypeModal(true);
       return;
     }
 
-    setCheckingOut(true);
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
-      const token = localStorage.getItem('token');
-      const session = JSON.parse(localStorage.getItem('activeSession') || '{}');
-
-      const payload = {
-        id: orderId || undefined,
-        tableId: selectedTable?.id || null,
-        sessionId: session?.id || null,
-        type: selectedTable ? "DINE_IN" : "TAKEAWAY",
-        items: cart.map(item => ({
-          productId: item.id,
-          quantity: item.quantity,
-          variantId: item.variantId || null,
-          notes: item.notes || null
-        })),
-        customer: customer || undefined,
-        couponCode: coupon?.code || null,
-        status: 'DRAFT'
-      };
-
-      const res = await fetch(`${API_URL}/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        const orderData = await res.json();
-        localStorage.setItem('payingOrderId', orderData.id);
-        window.location.href = '/pos/payment';
-      } else {
-        const err = await res.json();
-        showAlert(err.message || err.error || "Failed to checkout", "Checkout Failure", "error");
-      }
-    } catch (e) {
-      console.error(e);
-      showAlert("Checkout error", "Checkout Error", "error");
-    } finally {
-      setCheckingOut(false);
+    if (!currentCustomer || !currentCustomer.name || !currentCustomer.email || !currentCustomer.mobile) {
+      onAddCustomer(() => handleGoToCart());
+      return;
     }
+
+    window.location.href = '/pos/cart';
   };
 
   const handleSendToKitchen = async () => {
-    if (cart.length === 0) return;
-    if (!customer || !customer.name || !customer.email || !customer.mobile) {
-      showAlert(
-        "Please add customer details (Name, Email, and Mobile) in the sidebar or products page before sending to kitchen.",
-        "Kitchen Required Information",
-        "warning"
-      );
+    const { cart: currentCart, customer: currentCustomer } = latestState.current;
+    if (currentCart.length === 0) return;
+
+    const isTakeawayExplicit = localStorage.getItem('isTakeaway') === 'true';
+    if (!selectedTable && !isTakeawayExplicit) {
+      setPendingAction('KITCHEN');
+      setShowOrderTypeModal(true);
+      return;
+    }
+
+    if (!currentCustomer || !currentCustomer.name || !currentCustomer.email || !currentCustomer.mobile) {
+      onAddCustomer(() => handleSendToKitchen());
       return;
     }
     setSending(true);
@@ -119,11 +93,11 @@ export default function CartSidebar({ onAddCustomer }) {
         tableId: selectedTable?.id || undefined,
         status: 'SENT',
         type: selectedTable ? "DINE_IN" : "TAKEAWAY",
-        items: cart.map(item => ({
+        items: currentCart.map(item => ({
           productId: item.id,
           quantity: item.quantity
         })),
-        customer: customer || undefined
+        customer: currentCustomer || undefined
       };
 
       const orderResponse = await fetch(`${API_URL}/orders`, {
@@ -143,6 +117,8 @@ export default function CartSidebar({ onAddCustomer }) {
       clearCart();
       localStorage.removeItem('pendingOrder');
       localStorage.removeItem('pendingCustomer');
+      localStorage.removeItem('isTakeaway');
+      localStorage.removeItem('selectedTable');
       
       showToast("Order sent to kitchen successfully!", "success");
       window.location.href = '/pos/tables';
@@ -154,16 +130,39 @@ export default function CartSidebar({ onAddCustomer }) {
     }
   };
 
+  const handleOrderTypeSelect = (type) => {
+    setShowOrderTypeModal(false);
+    if (type === 'TAKEAWAY') {
+      localStorage.setItem('isTakeaway', 'true');
+      localStorage.removeItem('selectedTable');
+      setSelectedTable(null);
+      if (pendingAction === 'GOTO_CART') {
+        setTimeout(() => handleGoToCart(), 50);
+      } else if (pendingAction === 'KITCHEN') {
+        setTimeout(() => handleSendToKitchen(), 50);
+      }
+    } else if (type === 'DINE_IN') {
+      localStorage.removeItem('isTakeaway');
+      window.location.href = '/pos/tables';
+    }
+    setPendingAction(null);
+  };
+
   return (
-    <aside className="w-[400px] bg-white border-l border-[#E8F5E9] flex flex-col h-full shadow-2xl relative z-10">
+    <aside className="w-[360px] bg-[#FDFCF7] border-l border-[#EBE4D5] flex flex-col h-full min-h-0 shadow-[-20px_0_50px_rgba(62,43,33,0.03)] relative z-10">
+      <OrderTypeModal 
+        isOpen={showOrderTypeModal} 
+        onClose={() => setShowOrderTypeModal(false)} 
+        onSelect={handleOrderTypeSelect}
+      />
       {/* Header */}
-      <div className="p-6 border-b border-[#E8F5E9] bg-[#FBFBF2]">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-black text-[#1A4D2E] tracking-tight">Current Order</h2>
+      <div className="p-6 border-b border-[#EBE4D5] bg-white shrink-0">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-2xl font-black text-[#3E2B21] tracking-tight">Current Order</h2>
           {cart.length > 0 && (
             <button 
               onClick={clearCart} 
-              className="text-xs font-bold text-red-600 hover:text-red-700 uppercase tracking-wider px-3 py-1.5 rounded-xl hover:bg-red-50 transition-colors border border-red-100"
+              className="text-[10px] font-black text-red-500 hover:text-red-700 uppercase tracking-[0.1em] px-4 py-2 rounded-full hover:bg-red-50 transition-colors border border-red-100 shadow-sm"
             >
               Clear All
             </button>
@@ -171,83 +170,87 @@ export default function CartSidebar({ onAddCustomer }) {
         </div>
 
         {/* Customer & Table Badges */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {selectedTable ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#E8F5E9] text-[#1A4D2E] text-xs font-bold border border-[#4ADE80]/20">
-              <MapPin className="h-3.5 w-3.5" />
+            <button onClick={() => setShowOrderTypeModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F3EDE5] hover:bg-[#EBE4D5] text-[#3E2B21] text-xs font-bold border border-[#EBE4D5] shadow-sm transition-colors">
+              <MapPin className="h-4 w-4 text-[#8C8775]" />
               <span>{selectedTable.name}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 text-orange-700 text-xs font-bold border border-orange-100">
-              <Package className="h-3.5 w-3.5" />
+            </button>
+          ) : localStorage.getItem('isTakeaway') === 'true' ? (
+            <button onClick={() => setShowOrderTypeModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-bold border border-orange-100 shadow-sm transition-colors">
+              <Package className="h-4 w-4 text-orange-600" />
               <span>Takeaway</span>
-            </div>
+            </button>
+          ) : (
+            <button onClick={() => setShowOrderTypeModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 text-xs font-bold border border-gray-200 shadow-sm transition-colors">
+              <span>Select Type</span>
+            </button>
           )}
 
           <button
             onClick={onAddCustomer}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold border border-gray-200 transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-[#F3EDE5] text-[#3E2B21] text-xs font-bold border border-[#EBE4D5] shadow-sm transition-all cursor-pointer flex-1"
           >
-            <User className="h-3.5 w-3.5" />
-            <span>{customer?.name || "Walk-in"}</span>
+            <User className="h-4 w-4 text-[#8C8775]" />
+            <span className="truncate">{customer?.name || "Walk-in Customer"}</span>
           </button>
         </div>
       </div>
 
       {/* Cart Items List */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white scrollbar-thin scrollbar-thumb-[#1A4D2E]/10 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-[#FDFCF7] scrollbar-thin scrollbar-thumb-[#EBE4D5] scrollbar-track-transparent">
         {cart.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center opacity-60 py-20">
-            <div className="h-20 w-20 bg-[#FBFBF2] rounded-full flex items-center justify-center mb-4 border border-[#E8F5E9]">
-              <List className="h-10 w-10 text-[#5F6F65]" />
+          <div className="h-full flex flex-col items-center justify-center text-center py-20">
+            <div className="h-24 w-24 bg-white rounded-full flex items-center justify-center mb-6 border-2 border-dashed border-[#EBE4D5] shadow-sm">
+              <List className="h-10 w-10 text-[#8C8775]/50" />
             </div>
-            <p className="font-bold text-[#1A4D2E] text-lg">No items yet</p>
-            <p className="text-sm text-[#5F6F65] max-w-[200px] mt-1">Select products from the menu to start taking orders.</p>
+            <p className="font-black text-[#3E2B21] text-xl">Order is empty</p>
+            <p className="text-sm text-[#8C8775] max-w-[220px] mt-2 font-medium leading-relaxed">Select items from the menu to start building the order.</p>
           </div>
         ) : (
           cart.map((item) => (
-            <div key={item.id} className="flex gap-4 p-3 hover:bg-[#FBFBF2] rounded-[1.5rem] border border-transparent hover:border-[#E8F5E9] transition-all group">
-              <div className="h-20 w-20 bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl overflow-hidden relative shrink-0 border border-[#E8F5E9]">
+            <div key={item.id} className="flex gap-4 p-4 bg-white rounded-[24px] border border-[#EBE4D5] shadow-sm hover:shadow-md transition-all group">
+              <div className="h-20 w-20 bg-[#F3EDE5] rounded-[16px] overflow-hidden relative shrink-0">
                 {item.imageUrl ? (
                   <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-gray-50">
-                    <Package className="h-8 w-8 text-gray-300" />
+                  <div className="h-full w-full flex items-center justify-center">
+                    <Package className="h-8 w-8 text-[#8C8775]/30" />
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-start gap-2">
-                    <h4 className="font-bold text-[#1A4D2E] truncate leading-tight pr-2">{item.name}</h4>
-                    <p className="font-bold text-[#1A4D2E]">₹{(Number(item.price) * item.quantity).toFixed(2)}</p>
+                  <div className="flex justify-between items-start gap-2 mb-1">
+                    <h4 className="font-black text-[#3E2B21] truncate leading-tight pr-2 text-base">{item.name}</h4>
+                    <p className="font-black text-[#3E2B21]">₹{(Number(item.price) * item.quantity).toFixed(2)}</p>
                   </div>
-                  <p className="text-xs text-[#5F6F65] mt-0.5">
-                    {item.category?.name || "Uncategorized"}
+                  <p className="text-[10px] font-bold text-[#8C8775] uppercase tracking-wider">
+                    {item.category?.name || "Menu"}
                   </p>
                 </div>
                 
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center bg-[#FBFBF2] border border-[#E8F5E9] rounded-full h-9 px-1">
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center bg-[#FDFCF7] border border-[#EBE4D5] rounded-full h-10 px-1 shadow-inner">
                     <button 
                       onClick={() => decreaseQuantity(item.id)}
-                      className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-white text-[#5F6F65] transition-colors border border-transparent hover:border-gray-200"
+                      className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-white text-[#8C8775] hover:text-[#3E2B21] transition-all hover:shadow-sm"
                     >
-                      <Minus className="h-3 w-3" />
+                      <Minus className="h-3.5 w-3.5" />
                     </button>
-                    <span className="text-sm font-bold w-7 text-center text-[#1A4D2E]">{item.quantity}</span>
+                    <span className="text-sm font-black w-8 text-center text-[#3E2B21]">{item.quantity}</span>
                     <button 
                       onClick={() => addItem(item)}
-                      className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-white text-[#5F6F65] transition-colors border border-transparent hover:border-gray-200"
+                      className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-white text-[#8C8775] hover:text-[#3E2B21] transition-all hover:shadow-sm"
                     >
-                      <Plus className="h-3 w-3" />
+                      <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   <button 
                     onClick={() => removeItem(item.id)}
-                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-100"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4.5 w-4.5" />
                   </button>
                 </div>
               </div>
@@ -257,32 +260,33 @@ export default function CartSidebar({ onAddCustomer }) {
       </div>
 
       {/* Summary Section */}
-      <div className="p-6 bg-[#FBFBF2] border-t border-[#E8F5E9] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.03)] space-y-4">
-        <div className="space-y-2.5">
-          <div className="flex justify-between text-sm text-[#5F6F65]">
+      <div className="p-7 bg-white border-t border-[#EBE4D5] shadow-[0_-10px_40px_rgba(62,43,33,0.04)] z-20 shrink-0">
+        <div className="space-y-3 mb-6">
+          <div className="flex justify-between text-sm text-[#8C8775] font-bold">
             <span>Subtotal</span>
-            <span className="font-bold text-[#1A4D2E]">₹{subtotal.toFixed(2)}</span>
+            <span className="text-[#3E2B21]">₹{subtotal.toFixed(2)}</span>
           </div>
           {tax > 0 && (
-            <div className="flex justify-between text-sm text-[#5F6F65]">
+            <div className="flex justify-between text-sm text-[#8C8775] font-bold">
               <span>Tax</span>
-              <span className="font-bold text-[#1A4D2E]">₹{tax.toFixed(2)}</span>
+              <span className="text-[#3E2B21]">₹{tax.toFixed(2)}</span>
             </div>
           )}
-          <div className="flex justify-between items-center text-xl font-bold text-[#1A4D2E] pt-3 border-t border-[#E8F5E9] mt-2">
-            <span>Total</span>
-            <span className="text-2xl font-black text-[#1A4D2E]">₹{total.toFixed(2)}</span>
+          <div className="flex justify-between items-center pt-4 border-t border-dashed border-[#EBE4D5] mt-4">
+            <span className="text-base font-bold text-[#8C8775] uppercase tracking-wider">Total</span>
+            <span className="text-3xl font-black text-[#3E2B21]">₹{total.toFixed(2)}</span>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 pt-2">
+        <div className="flex flex-col gap-3">
           <button 
-            onClick={handleCheckout}
-            disabled={checkingOut || cart.length === 0}
-            className="w-full h-14 bg-[#1A4D2E] text-white py-3 rounded-[2rem] font-bold text-lg hover:bg-[#143d24] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            onClick={handleGoToCart}
+            disabled={cart.length === 0}
+            className="w-full h-16 bg-[#EBE4D5] text-[#3E2B21] rounded-[24px] font-black text-xl hover:bg-[#D4A373] hover:text-white transition-all duration-300 shadow-sm flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
           >
-            <CreditCard className="h-5 w-5" />
-            {checkingOut ? "Processing..." : "Pay Now"}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+            <CreditCard className="h-6 w-6" />
+            <span>Go to Cart</span>
           </button>
         </div>
       </div>

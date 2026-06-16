@@ -36,9 +36,9 @@ export default function LoginPage() {
   const handleQuickLogin = async (role) => {
     let email = "";
     let password = "password123";
-    if (role === "admin") email = "admin@odoo-cafe.com";
-    if (role === "kitchen") email = "gordon@odoo-cafe.com";
-    if (role === "cashier") email = "jagjeet@odoo-cafe.com";
+    if (role === "admin") email = "admin@brew-and-bite.com";
+    if (role === "kitchen") email = "gordon@brew-and-bite.com";
+    if (role === "cashier") email = "jagjeet@brew-and-bite.com";
     const user = await login(email, password);
     if (user) handleLoginSuccess(user);
   };
@@ -79,7 +79,7 @@ export default function LoginPage() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <div className="h-16 w-16 rounded-[20px] bg-white/[0.08] backdrop-blur-xl flex items-center justify-center border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-              <Image src="/odoo_cafe_logo.png" alt="logo" width={48} height={48} className="object-contain brightness-0 invert opacity-90" />
+              <Image src="/brew_and_bite_logo.png" alt="logo" width={48} height={48} className="object-contain brightness-0 invert opacity-90" />
             </div>
           </motion.div>
 
@@ -127,7 +127,7 @@ export default function LoginPage() {
             className="flex items-center gap-3 text-white/20 text-sm font-medium"
           >
             <Coffee className="h-4 w-4" />
-            <span>Odoo Cafe POS · Built for excellence</span>
+            <span>Brew & Bite POS · Built for excellence</span>
           </motion.div>
         </div>
       </div>
@@ -225,7 +225,7 @@ export default function LoginPage() {
                 <Input
                   {...register("email")}
                   type="email"
-                  placeholder="barista@odoocafe.com"
+                  placeholder="barista@brewandbite.com"
                   className="h-[54px] rounded-[16px] border-[#2A1A10]/[0.06] bg-white focus:border-[#2A1A10]/15 focus:ring-2 focus:ring-[#2A1A10]/[0.04] text-[15px] font-medium text-[#2A1A10] placeholder:text-[#2A1A10]/20 shadow-[0_2px_8px_rgba(42,26,16,0.02)] transition-all duration-200 group-hover:border-[#2A1A10]/10"
                 />
               </div>

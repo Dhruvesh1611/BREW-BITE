@@ -27,7 +27,7 @@ async function createTenant() {
   const admin = await prisma.user.create({
     data: {
       name: 'Admin User',
-      email: 'admin@odoo-cafe.com',
+      email: 'admin@brew-and-bite.com',
       password,
       role: 'ADMIN',
       isActive: true,
@@ -37,8 +37,8 @@ async function createTenant() {
 
   const shop = await prisma.shop.create({
     data: {
-      name: 'Odoo Cafe',
-      slug: `${slugify('Odoo Cafe')}-${crypto.randomBytes(3).toString('hex')}`,
+      name: 'Brew & Bite',
+      slug: `${slugify('Brew & Bite')}-${crypto.randomBytes(3).toString('hex')}`,
       adminId: admin.id,
     },
   });
@@ -49,8 +49,8 @@ async function createTenant() {
   });
 
   const staff = [
-    { name: 'Jagjeet Singh', email: 'jagjeet@odoo-cafe.com', role: 'EMPLOYEE' },
-    { name: 'Gordon Ramsay', email: 'gordon@odoo-cafe.com', role: 'KITCHEN' },
+    { name: 'Jagjeet Singh', email: 'jagjeet@brew-and-bite.com', role: 'EMPLOYEE' },
+    { name: 'Gordon Ramsay', email: 'gordon@brew-and-bite.com', role: 'KITCHEN' },
   ];
 
   for (const member of staff) {

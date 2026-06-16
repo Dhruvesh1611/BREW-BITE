@@ -40,6 +40,9 @@ export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrdersCount, setTotalOrdersCount] = useState(0);
+  const [exportData, setExportData] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
@@ -104,6 +107,33 @@ export default function OrdersPage() {
     }
   };
 
+  const fetchOrderStats = async () => {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/orders/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setStats(prev => ({
+          ...prev,
+          SENT: data.SENT || 0,
+          PREPARING: data.PREPARING || 0,
+          COMPLETED: data.COMPLETED || 0,
+          PAID: data.PAID || 0,
+          CANCELLED: data.CANCELLED || 0,
+          DRAFT: data.DRAFT || 0,
+          allTimeTotal: data.total || 0
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch order stats:', error);
+    }
+  };
+
   const fetchOrders = async () => {
     setLoading(true);
     try {
@@ -147,6 +177,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchStats();
+    fetchOrderStats();
   }, []);
 
   useEffect(() => {
@@ -156,6 +187,80 @@ export default function OrdersPage() {
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
     setCurrentPage(1);
+  };
+
+  const handleExportClick = async () => {
+    setExporting(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
+      const token = localStorage.getItem('token');
+      
+      const queryParams = new URLSearchParams({
+        limit: 10000,
+        status: statusFilter
+      });
+      if (debouncedSearchQuery) {
+        queryParams.append('search', debouncedSearchQuery);
+      }
+
+      const response = await fetch(`${API_URL}/orders?${queryParams.toString()}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch orders for export");
+      const result = await response.json();
+      const data = result.data || result;
+
+      if (!data.length) {
+        alert("No orders to export!");
+        return;
+      }
+
+      setExportData(data);
+      setShowExportModal(true);
+    } catch (error) {
+      console.error('Export fetch failed:', error);
+      alert('Failed to fetch orders for export');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const confirmExport = () => {
+    if (!exportData) return;
+
+    // Generate CSV
+    const headers = ['Order Number', 'Date', 'Type', 'Table', 'Customer', 'Status', 'Payment', 'Total', 'Items'];
+    const csvRows = [headers.join(',')];
+
+    exportData.forEach(order => {
+      const row = [
+        order.orderNumber,
+        new Date(order.createdAt).toLocaleString(),
+        order.type,
+        order.table?.name || '-',
+        order.customerName || 'Walk-in',
+        order.status,
+        order.paymentStatus,
+        Number(order.totalAmount).toFixed(2),
+        order.items?.map(i => `${i.quantity}x ${i.productName}`).join('; ') || ''
+      ];
+      // Escape quotes and commas
+      csvRows.push(row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
+    });
+
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `orders_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setShowExportModal(false);
+    setExportData(null);
   };
 
   const getStatusConfig = (status) => {
@@ -235,7 +340,7 @@ export default function OrdersPage() {
 
   const statusSummary = useMemo(() => {
     return {
-      total: stats.totalOrders,
+      total: stats.allTimeTotal || 0,
       SENT: stats.SENT,
       PREPARING: stats.PREPARING,
       COMPLETED: stats.COMPLETED,
@@ -310,7 +415,7 @@ export default function OrdersPage() {
         // Header
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
-        doc.text("ODOO CAFE", pageWidth / 2, yPos, { align: "center" });
+        doc.text("BREW & BITE", pageWidth / 2, yPos, { align: "center" });
         yPos += 10;
 
         doc.setFontSize(12);
@@ -624,8 +729,12 @@ export default function OrdersPage() {
               <Calendar className="h-5 w-5 text-[#3E2B21]/70" />
               <span>{serviceDate}</span>
             </div>
-            <button className="px-4 py-2 rounded-full bg-[#3E2B21] text-white text-xs font-bold shadow-md flex items-center gap-2 hover:bg-[#2C1810] transition-colors">
-              <Download className="h-3.5 w-3.5" /> Export
+            <button 
+              onClick={handleExportClick}
+              disabled={exporting}
+              className="px-4 py-2 rounded-full bg-[#3E2B21] text-white text-xs font-bold shadow-md flex items-center gap-2 hover:bg-[#2C1810] transition-colors disabled:opacity-50"
+            >
+              <Download className="h-3.5 w-3.5" /> {exporting ? 'Loading...' : 'Export'}
             </button>
           </div>
 
@@ -664,6 +773,78 @@ export default function OrdersPage() {
           </div>
         </div>
       </section>
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/*  EXPORT PREVIEW MODAL                                   */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {showExportModal && exportData && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[32px] max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-[0_25px_80px_rgba(62,43,33,0.18)] flex flex-col">
+            <div className="p-8 pb-6 border-b border-[#EBE4D5]/60 bg-white flex justify-between items-center shrink-0">
+              <div>
+                <h2 className="text-xl font-black text-[#3E2B21]">Export Preview</h2>
+                <p className="text-sm text-[#3E2B21]/50 font-medium">You are about to export {exportData.length} records</p>
+              </div>
+              <button
+                onClick={() => { setShowExportModal(false); setExportData(null); }}
+                className="h-10 w-10 rounded-full bg-[#F5EFE6] hover:bg-[#EBE4D5] flex items-center justify-center transition-colors"
+              >
+                <X className="h-5 w-5 text-[#6B4423]" />
+              </button>
+            </div>
+            
+            <div className="p-8 overflow-y-auto bg-[#FDFCF7]">
+              <div className="border border-[#EBE4D5]/60 rounded-2xl overflow-hidden bg-white">
+                <table className="w-full text-sm text-left text-[#3E2B21]">
+                  <thead className="bg-[#F5EFE6] text-[#6B4423] font-bold text-xs uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3 border-b border-[#EBE4D5]/60">Order No</th>
+                      <th className="px-4 py-3 border-b border-[#EBE4D5]/60">Customer</th>
+                      <th className="px-4 py-3 border-b border-[#EBE4D5]/60">Table</th>
+                      <th className="px-4 py-3 border-b border-[#EBE4D5]/60">Status</th>
+                      <th className="px-4 py-3 border-b border-[#EBE4D5]/60">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#EBE4D5]/60">
+                    {exportData.slice(0, 100).map((row, i) => (
+                      <tr key={row.id || i} className="hover:bg-[#FDFCF7] transition-colors">
+                        <td className="px-4 py-3 font-semibold">{row.orderNumber}</td>
+                        <td className="px-4 py-3">{row.customerName || 'Walk-in'}</td>
+                        <td className="px-4 py-3">{row.table?.name || '-'}</td>
+                        <td className="px-4 py-3">{row.status}</td>
+                        <td className="px-4 py-3 font-bold">₹{Number(row.totalAmount).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    {exportData.length > 100 && (
+                      <tr>
+                        <td colSpan="5" className="px-4 py-3 text-center text-[#8C8775] font-medium italic">
+                          ... and {exportData.length - 100} more rows not shown in preview
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-[#EBE4D5]/60 bg-white flex justify-end gap-3 shrink-0">
+              <button
+                onClick={() => { setShowExportModal(false); setExportData(null); }}
+                className="px-6 py-3 rounded-full text-[#3E2B21] font-bold hover:bg-[#F5EFE6] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmExport}
+                className="px-6 py-3 rounded-full bg-[#3E2B21] text-white font-bold flex items-center gap-2 hover:bg-[#2C1810] transition-colors shadow-lg"
+              >
+                <Download className="h-4 w-4" />
+                Confirm & Download CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════ */}
       {/*  QUICK STATS — horizontal cards                       */}

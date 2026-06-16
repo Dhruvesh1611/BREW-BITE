@@ -241,7 +241,7 @@ exports.sendWhatsAppReceipt = async (req, res) => {
       `- ${item.quantity}x ${item.productName}${item.variantName ? ` (${item.variantName})` : ''} - ₹${(Number(item.price) * item.quantity).toFixed(2)}`
     ).join('\n');
 
-    const message = `*Odoo Cafe Receipt*\n--------------------------\nOrder: ${order.orderNumber}\nDate: ${new Date(order.updatedAt || order.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\nTable: ${tableName}\nCustomer: ${order.customerName || 'Guest'}\n--------------------------\nItems:\n${itemsText}\n--------------------------\nSubtotal: ₹${subtotal.toFixed(2)}\n${discount > 0 ? `Discount: -₹${discount.toFixed(2)}\n` : ''}${tax > 0 ? `Tax: ₹${tax.toFixed(2)}\n` : ''}Total Amount: ₹${total.toFixed(2)}\n--------------------------\nPayment Method: ${paymentMethodDisplay}\nThank you for dining with us!`;
+    const message = `*Brew & Bite Receipt*\n--------------------------\nOrder: ${order.orderNumber}\nDate: ${new Date(order.updatedAt || order.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\nTable: ${tableName}\nCustomer: ${order.customerName || 'Guest'}\n--------------------------\nItems:\n${itemsText}\n--------------------------\nSubtotal: ₹${subtotal.toFixed(2)}\n${discount > 0 ? `Discount: -₹${discount.toFixed(2)}\n` : ''}${tax > 0 ? `Tax: ₹${tax.toFixed(2)}\n` : ''}Total Amount: ₹${total.toFixed(2)}\n--------------------------\nPayment Method: ${paymentMethodDisplay}\nThank you for dining with us!`;
 
     await whatsappService.sendReceipt(phone, message);
     res.json({ success: true });

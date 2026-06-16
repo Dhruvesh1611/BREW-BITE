@@ -22,10 +22,10 @@ function getTransporter() {
 }
 
 const sendUserCredentialsEmail = async ({ to, name, email, password, role, shopName }) => {
-  const subject = `Your Odoo Cafe account credentials`;
+  const subject = `Your Brew & Bite account credentials`;
   const html = `
     <div style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.6;">
-      <h2 style="color: #1A4D2E;">Welcome to Odoo Cafe </h2>
+      <h2 style="color: #1A4D2E;">Welcome to Brew & Bite </h2>
       <p>Hello ${name},</p>
       <p>Your account has been created with the following credentials:</p>
       <ul>
@@ -61,8 +61,8 @@ const sendUserCredentialsEmail = async ({ to, name, email, password, role, shopN
   return { mocked: false };
 };
 
-const sendPasswordResetEmail = async ({ to, name, resetLink, shopName = 'Odoo Cafe' }) => {
-  const subject = `Odoo Cafe : password reset request`;
+const sendPasswordResetEmail = async ({ to, name, resetLink, shopName = 'Brew & Bite' }) => {
+  const subject = `Brew & Bite : password reset request`;
   const html = `
     <div style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.6;">
       <h2 style="color: #1A4D2E;">Reset your ${shopName} password</h2>

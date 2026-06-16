@@ -41,12 +41,12 @@ export default function DashboardLayout({ children }) {
         <div className="px-5 py-8 flex items-center justify-between relative z-10">
           {isSidebarOpen && (
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-md shrink-0">
-                <Coffee className="h-6 w-6 text-coffee-dark" />
+              <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-md shrink-0 overflow-hidden p-1">
+                <Image src="/brew_and_bite_logo.png" alt="Logo" width={32} height={32} className="object-contain" />
               </div>
               <div className="flex flex-col">
                 <p className="text-[15px] font-bold tracking-wider uppercase text-white leading-tight">
-                  Odoo Cafe
+                  Brew & Bite
                 </p>
                 <p className="text-[10px] text-white/70 font-medium tracking-widest">
                   Smart Point

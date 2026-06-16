@@ -172,7 +172,7 @@ async function requestPasswordReset(payload) {
     to: user.email,
     name: user.name,
     resetLink: buildResetLink(token),
-    shopName: user.shop?.name || 'Odoo Cafe',
+    shopName: user.shop?.name || 'Brew & Bite',
   });
 
   return {

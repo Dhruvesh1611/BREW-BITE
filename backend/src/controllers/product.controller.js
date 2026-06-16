@@ -3,6 +3,8 @@ const prisma = require('../lib/prisma');
 const { z } = require('zod');
 const { isPrismaDatabaseUnavailable } = require('../lib/prisma-errors');
 const { showcaseCategories, showcaseProducts, showcaseStats } = require('../lib/showcase-data');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/errors/AppError');
 
 // Validation Schemas
 const productSchema = z.object({
@@ -26,44 +28,37 @@ const categorySchema = z.object({
 });
 
 // Category Controllers
-exports.createCategory = async (req, res) => {
-    try {
-        const { name } = categorySchema.parse(req.body);
-        const category = await prisma.category.create({ data: { name } });
-        res.status(201).json(category);
-    } catch (error) {
-        res.status(400).json({ error: error.errors || error.message });
-    }
-};
+exports.createCategory = catchAsync(async (req, res) => {
+    const { name } = categorySchema.parse(req.body);
+    const category = await prisma.category.create({ data: { name } });
+    
+    res.status(201).json({
+        success: true,
+        data: category
+    });
+});
 
-exports.getCategories = async (req, res) => {
+exports.getCategories = catchAsync(async (req, res, next) => {
     try {
         const categories = await prisma.category.findMany({
             include: { _count: { select: { products: true } } }
         });
-        res.json(categories);
+        res.json({ success: true, data: categories });
     } catch (error) {
         if (isPrismaDatabaseUnavailable(error)) {
-            return res.json(showcaseCategories);
+            return res.json({ success: true, data: showcaseCategories });
         }
-        res.status(500).json({ error: error.message });
+        return next(error);
     }
-};
+});
 
-exports.deleteCategory = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await prisma.category.delete({ where: { id } });
-        res.json({ message: "Category deleted" });
-    } catch (error) {
-        if (error.code === 'P2003') {
-            return res.status(400).json({ error: "Cannot delete category containing products." });
-        }
-        res.status(500).json({ error: error.message });
-    }
-};
+exports.deleteCategory = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    await prisma.category.delete({ where: { id } });
+    res.json({ success: true, message: "Category deleted" });
+});
 
-exports.getProductsStats = async (req, res) => {
+exports.getProductsStats = catchAsync(async (req, res, next) => {
     try {
         const [total, available, kitchen, avgPriceData] = await Promise.all([
             prisma.product.count(),
@@ -74,49 +69,49 @@ exports.getProductsStats = async (req, res) => {
             })
         ]);
         res.json({
-            total,
-            available,
-            kitchen,
-            avgPrice: Number(avgPriceData._avg.price || 0)
+            success: true,
+            data: {
+                total,
+                available,
+                kitchen,
+                avgPrice: Number(avgPriceData._avg.price || 0)
+            }
         });
     } catch (error) {
         if (isPrismaDatabaseUnavailable(error)) {
-            return res.json(showcaseStats);
+            return res.json({ success: true, data: showcaseStats });
         }
-        res.status(500).json({ error: error.message });
+        return next(error);
     }
-};
+});
 
 // Product Controllers
-exports.createProduct = async (req, res) => {
-    try {
-        const data = productSchema.parse(req.body);
-        const { variants, ...productData } = data;
+exports.createProduct = catchAsync(async (req, res) => {
+    const data = productSchema.parse(req.body);
+    const { variants, ...productData } = data;
 
-        // Strip any accidental extra fields from variants (e.g. id, productId from frontend)
-        const cleanVariants = variants?.map(v => ({
-            name: v.name,
-            extraPrice: Number(v.extraPrice) || 0
-        }));
+    const cleanVariants = variants?.map(v => ({
+        name: v.name,
+        extraPrice: Number(v.extraPrice) || 0
+    }));
 
-        const product = await prisma.product.create({
-            data: {
-                ...productData,
-                variants: cleanVariants && cleanVariants.length > 0 ? {
-                    create: cleanVariants
-                } : undefined
-            },
-            include: { variants: true, category: true }
-        });
+    const product = await prisma.product.create({
+        data: {
+            ...productData,
+            variants: cleanVariants && cleanVariants.length > 0 ? {
+                create: cleanVariants
+            } : undefined
+        },
+        include: { variants: true, category: true }
+    });
 
-        res.status(201).json(product);
-    } catch (error) {
-        console.error('createProduct error:', error);
-        res.status(400).json({ error: error.errors || error.message });
-    }
-};
+    res.status(201).json({
+        success: true,
+        data: product
+    });
+});
 
-exports.getProducts = async (req, res) => {
+exports.getProducts = catchAsync(async (req, res, next) => {
     try {
         const { categoryId, page, limit, search } = req.query;
         const filter = {};
@@ -145,6 +140,7 @@ exports.getProducts = async (req, res) => {
             ]);
 
             return res.json({
+                success: true,
                 data: products,
                 pagination: {
                     total,
@@ -160,7 +156,7 @@ exports.getProducts = async (req, res) => {
             include: { variants: true, category: true },
             orderBy: { createdAt: 'desc' }
         });
-        res.json(products);
+        res.json({ success: true, data: products });
     } catch (error) {
         if (isPrismaDatabaseUnavailable(error)) {
             const { categoryId, page, limit, search } = req.query;
@@ -185,6 +181,7 @@ exports.getProducts = async (req, res) => {
                 const pagedProducts = products.slice(skip, skip + limitNum);
 
                 return res.json({
+                    success: true,
                     data: pagedProducts,
                     pagination: {
                         total: products.length,
@@ -195,73 +192,57 @@ exports.getProducts = async (req, res) => {
                 });
             }
 
-            return res.json(products);
+            return res.json({ success: true, data: products });
         }
-        res.status(500).json({ error: error.message });
+        return next(error);
     }
-};
+});
 
-exports.updateProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const data = productSchema.partial().parse(req.body);
-        const { variants, ...productData } = data;
+exports.updateProduct = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const data = productSchema.partial().parse(req.body);
+    const { variants, ...productData } = data;
 
-        // Strip extra DB fields from variants (id, productId, createdAt, updatedAt)
-        // These come back from the frontend when editing an existing product
-        const cleanVariants = variants?.map(v => ({
-            name: v.name,
-            extraPrice: Number(v.extraPrice) || 0
-        }));
+    const cleanVariants = variants?.map(v => ({
+        name: v.name,
+        extraPrice: Number(v.extraPrice) || 0
+    }));
 
-        const product = await prisma.$transaction(async (tx) => {
-            await tx.product.update({
-                where: { id },
-                data: productData
-            });
-
-            if (cleanVariants) {
-                // Delete existing variants and recreate with the new list
-                await tx.variant.deleteMany({ where: { productId: id } });
-                if (cleanVariants.length > 0) {
-                    await tx.variant.createMany({
-                        data: cleanVariants.map(v => ({ ...v, productId: id }))
-                    });
-                }
-            }
-
-            return tx.product.findUnique({
-                where: { id },
-                include: { variants: true, category: true }
-            });
+    const product = await prisma.$transaction(async (tx) => {
+        // If updating a non-existent product, tx.product.update will throw P2025
+        // which our prismaErrorMapper catches automatically.
+        await tx.product.update({
+            where: { id },
+            data: productData
         });
 
-        res.json(product);
-    } catch (error) {
-        console.error('updateProduct error:', error);
-        res.status(400).json({ error: error.errors || error.message });
-    }
-};
-
-exports.deleteProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        await prisma.$transaction([
-            prisma.variant.deleteMany({ where: { productId: id } }),
-            prisma.product.delete({ where: { id } })
-        ]);
-
-        res.json({ message: "Product deleted successfully" });
-    } catch (error) {
-        if (error.code === 'P2025') {
-            return res.status(404).json({ error: "Product not found." });
+        if (cleanVariants) {
+            await tx.variant.deleteMany({ where: { productId: id } });
+            if (cleanVariants.length > 0) {
+                await tx.variant.createMany({
+                    data: cleanVariants.map(v => ({ ...v, productId: id }))
+                });
+            }
         }
 
-        if (error.code === 'P2003') {
-            return res.status(400).json({ error: "Cannot delete product because it is part of existing orders." });
-        }
+        return tx.product.findUnique({
+            where: { id },
+            include: { variants: true, category: true }
+        });
+    });
 
-        res.status(500).json({ error: error.message });
-    }
-};
+    res.json({ success: true, data: product });
+});
+
+exports.deleteProduct = catchAsync(async (req, res) => {
+    const { id } = req.params;
+
+    // Prisma errors (like P2003 Foreign Key constraint if it's attached to an order) 
+    // are forwarded to the global handler and properly formatted.
+    await prisma.$transaction([
+        prisma.variant.deleteMany({ where: { productId: id } }),
+        prisma.product.delete({ where: { id } })
+    ]);
+
+    res.json({ success: true, message: "Product deleted successfully" });
+});

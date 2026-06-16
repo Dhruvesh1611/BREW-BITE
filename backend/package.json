@@ -1,7 +1,7 @@
 {
-  "name": "odoo-cafe-pos-server",
+  "name": "brew-and-bite-pos-server",
   "version": "1.0.0",
-  "description": "Backend API server for Odoo Cafe POS System",
+  "description": "Backend API server for Brew & Bite POS System",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

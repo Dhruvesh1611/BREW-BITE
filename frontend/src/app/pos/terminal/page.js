@@ -23,6 +23,26 @@ export default function POSTerminalPage() {
   const [selectedTable, setSelectedTable] = useState(null);
   const [showCloseSessionModal, setShowCloseSessionModal] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [postCustomerAction, setPostCustomerAction] = useState(null);
+
+  const handleOpenCustomerModal = (callback = null) => {
+    if (callback && typeof callback === 'function') {
+      setPostCustomerAction(() => callback);
+    } else {
+      setPostCustomerAction(null);
+    }
+    setIsCustomerModalOpen(true);
+  };
+
+  const handleCustomerSave = (cust) => {
+    setCustomer(cust);
+    if (postCustomerAction) {
+      setTimeout(() => {
+        postCustomerAction();
+      }, 100);
+      setPostCustomerAction(null);
+    }
+  };
 
   const formatErrorMessage = (err) => {
     if (!err) return "An unknown error occurred.";
@@ -65,10 +85,11 @@ export default function POSTerminalPage() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setProducts(data);
+        const json = await response.json();
+        const productsList = json.data || json; // Handle both new { success, data } and old format
+        setProducts(productsList);
 
-        const uniqueCategories = [...new Set(data.map(p => p.category?.name).filter(Boolean))];
+        const uniqueCategories = [...new Set(productsList.map(p => p.category?.name).filter(Boolean))];
         setCategories(uniqueCategories.map((name, idx) => ({ id: idx, name })));
       }
     } catch (error) {
@@ -90,7 +111,7 @@ export default function POSTerminalPage() {
     const name = categoryName?.toLowerCase() || '';
     if (name.includes('food')) return 'bg-purple-900';
     if (name.includes('beverage') || name.includes('coffee') || name.includes('drink')) return 'bg-coffee-800';
-    if (name.includes('dessert') || name.includes('cake') || name.includes('pastry')) return 'bg-green-800';
+    if (name.includes('dessert') || name.includes('cake') || name.includes('pastry')) return 'bg-coffee-800';
     return 'bg-coffee-600';
   };
 
@@ -113,7 +134,7 @@ export default function POSTerminalPage() {
         <CustomerModal
           isOpen={isCustomerModalOpen}
           onClose={() => setIsCustomerModalOpen(false)}
-          onSave={setCustomer}
+          onSave={handleCustomerSave}
           initialData={customer}
         />
 
@@ -124,160 +145,161 @@ export default function POSTerminalPage() {
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between bg-white p-4 rounded-[2rem] shadow-md border border-[#E8F5E9] shrink-0">
+            <div className="flex items-center justify-between bg-white/70 backdrop-blur-xl p-5 rounded-[32px] shadow-[0_8px_30px_rgb(62,43,33,0.04)] border border-white shrink-0">
               <div className="flex items-center gap-6">
                 <button
-                  onClick={() => setIsCustomerModalOpen(true)}
-                  className="flex items-center gap-3 hover:bg-[#FBFBF2] px-3 py-2 rounded-xl transition-colors group"
+                  onClick={() => handleOpenCustomerModal()}
+                  className="flex items-center gap-4 hover:bg-white px-4 py-3 rounded-2xl transition-all duration-300 group shadow-sm border border-transparent hover:border-[#EBE4D5] hover:shadow-md"
                 >
-                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors ${customer ? 'bg-[#E8F5E9] text-[#1A4D2E]' : 'bg-gray-100 text-gray-500 group-hover:bg-[#FBFBF2] group-hover:text-[#1A4D2E]'}`}>
-                    <User className="h-5 w-5" />
+                  <div className={`h-12 w-12 rounded-[18px] flex items-center justify-center transition-colors ${customer ? 'bg-[#3E2B21] text-[#FDFCF7]' : 'bg-[#F3EDE5] text-[#8C8775] group-hover:bg-[#EBE4D5] group-hover:text-[#3E2B21]'}`}>
+                    <User className="h-6 w-6" />
                   </div>
                   <div className="text-left">
-                    <p className="text-xs text-[#5F6F65] font-bold uppercase tracking-wider">Customer</p>
-                    <p className={`text-base font-bold ${customer ? 'text-[#1A4D2E]' : 'text-gray-400'}`}>
-                      {customer ? customer.name : 'Add Customer'}
+                    <p className="text-[10px] text-[#8C8775] font-bold uppercase tracking-[0.15em] mb-0.5">Customer</p>
+                    <p className={`text-base font-black tracking-tight ${customer ? 'text-[#3E2B21]' : 'text-[#8C8775]'}`}>
+                      {customer ? customer.name : 'Select Customer'}
                     </p>
                   </div>
                 </button>
 
-                <div className="h-8 w-px bg-[#E8F5E9]"></div>
+                <div className="h-10 w-px bg-[#EBE4D5]"></div>
 
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-[#E8F5E9] rounded-xl flex items-center justify-center text-[#1A4D2E]">
-                    <ShoppingCart className="h-5 w-5" />
+                <div className="flex items-center gap-4 px-4">
+                  <div className="h-12 w-12 bg-[#F3EDE5] rounded-[18px] flex items-center justify-center text-[#3E2B21]">
+                    <ShoppingCart className="h-6 w-6" />
                   </div>
                   <div className="text-left">
-                    <p className="text-xs text-[#5F6F65] font-bold uppercase tracking-wider">Cart</p>
-                    <p className="text-base font-bold text-[#1A4D2E]">{cart.length} items</p>
+                    <p className="text-[10px] text-[#8C8775] font-bold uppercase tracking-[0.15em] mb-0.5">Active Cart</p>
+                    <p className="text-base font-black text-[#3E2B21]">{cart.length} items</p>
                   </div>
                 </div>
 
                 {orderId && (
                   <>
-                    <div className="h-8 w-px bg-[#E8F5E9]"></div>
-                    <span className="px-3 py-1 rounded-full text-[11px] font-black bg-orange-100 text-orange-700 uppercase tracking-wider border border-orange-200">
-                      ✏️ Editing Active Order
+                    <div className="h-10 w-px bg-[#EBE4D5]"></div>
+                    <span className="px-4 py-2 rounded-full text-xs font-black bg-orange-50 text-[#3E2B21] uppercase tracking-[0.1em] border border-orange-100 flex items-center gap-2 shadow-sm">
+                      <span className="h-2 w-2 rounded-full bg-orange-400 animate-pulse"></span>
+                      Editing Order
                     </span>
                   </>
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={() => window.location.href = '/pos/cart'}
-                  className="px-6 py-3 bg-[#1A4D2E] text-white rounded-[2rem] font-bold hover:bg-[#143d24] transition-all shadow-lg hover:shadow-xl flex items-center gap-2 text-sm"
+                  className="px-8 py-3.5 bg-[#3E2B21] text-[#FDFCF7] rounded-[20px] font-black hover:bg-[#2C1810] transition-all shadow-[0_8px_20px_rgb(62,43,33,0.2)] hover:shadow-[0_12px_25px_rgb(62,43,33,0.3)] hover:-translate-y-0.5 flex items-center gap-2 text-sm"
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className="h-5 w-5" />
                   View Cart
                 </button>
                 <button
                   onClick={() => fetchProducts()}
-                  className="p-2 hover:bg-[#FBFBF2] rounded-xl text-[#5F6F65] transition-colors"
+                  className="h-12 w-12 flex items-center justify-center bg-white hover:bg-[#F3EDE5] rounded-[20px] text-[#3E2B21] transition-all shadow-sm border border-[#EBE4D5]"
                 >
                   <RefreshCw className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setShowCloseSessionModal(true)}
-                  className="px-4 py-2 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center gap-2 text-sm"
+                  className="px-6 py-3.5 bg-red-50/50 text-red-600 rounded-[20px] font-bold hover:bg-red-50 transition-colors flex items-center gap-2 text-sm border border-red-100/50"
                 >
-                  <Power className="h-4 w-4" />
-                  Close
+                  <Power className="h-5 w-5" />
+                  End Shift
                 </button>
               </div>
             </div>
 
-            {/* Search */}
-            <div className="relative shrink-0">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#5F6F65] h-5 w-5" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="w-full pl-12 pr-4 py-3 rounded-[2rem] border-2 border-[#E8F5E9] focus:border-[#1A4D2E] focus:outline-none transition-colors bg-white shadow-sm font-semibold"
-              />
-            </div>
+            <div className="flex flex-col gap-5 shrink-0">
+              {/* Search */}
+              <div className="relative w-full">
+                <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-[#8C8775] h-5 w-5" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full pl-14 pr-5 py-3.5 rounded-[20px] border-2 border-white focus:border-[#3E2B21]/20 focus:outline-none transition-all bg-white shadow-[0_8px_30px_rgb(62,43,33,0.04)] font-semibold text-[#3E2B21] placeholder:text-[#8C8775]/60"
+                />
+              </div>
 
-            {/* Categories */}
-            <div className="flex gap-3 overflow-x-auto pb-2 shrink-0 scrollbar-none">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`px-6 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all shadow-sm ${!selectedCategory ? 'bg-[#1A4D2E] text-white' : 'bg-white text-[#5F6F65] hover:bg-[#FBFBF2] border border-[#E8F5E9]'
-                  }`}
-              >
-                All
-              </button>
-              {categories.map((category) => (
+              {/* Categories */}
+              <div className="flex flex-wrap gap-3 pb-2">
                 <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.name)}
-                  className={`px-6 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all shadow-sm ${selectedCategory === category.name ? 'bg-[#1A4D2E] text-white' : 'bg-white text-[#5F6F65] hover:bg-[#FBFBF2] border border-[#E8F5E9]'
+                  onClick={() => setSelectedCategory(null)}
+                  className={`px-7 py-3 rounded-[20px] font-black text-sm transition-all duration-300 shadow-sm ${!selectedCategory ? 'bg-[#3E2B21] text-[#FDFCF7] shadow-[0_8px_20px_rgb(62,43,33,0.2)] scale-105' : 'bg-white text-[#8C8775] hover:bg-[#FDFCF7] border border-[#EBE4D5] hover:text-[#3E2B21]'
                     }`}
                 >
-                  {category.name}
+                  All Menu
                 </button>
-              ))}
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.name)}
+                    className={`px-7 py-3 rounded-[20px] font-black text-sm transition-all duration-300 shadow-sm ${selectedCategory === category.name ? 'bg-[#3E2B21] text-[#FDFCF7] shadow-[0_8px_20px_rgb(62,43,33,0.2)] scale-105' : 'bg-white text-[#8C8775] hover:bg-[#FDFCF7] border border-[#EBE4D5] hover:text-[#3E2B21]'
+                      }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Scrollable Products Grid */}
-            <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#1A4D2E]/15 scrollbar-track-transparent pb-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#3E2B21]/15 scrollbar-track-transparent pb-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-6">
                 {filteredProducts.map((product) => {
-                  const categoryColorBg = getCategoryColor(product.category?.name);
-                  const categoryFooterClass = getCategoryBorderColor(product.category?.name);
-
                   return (
                     <div
                       key={product.id}
-                      className={`group relative rounded-[24px] bg-white border border-[#EFE8D8] shadow-sm hover:shadow-lg transition-all overflow-hidden border-b-[6px] ${categoryFooterClass} cursor-pointer flex flex-col justify-between`}
+                      className="group relative rounded-[32px] bg-[#FDFCF7] border border-[#EBE4D5] shadow-[0_8px_30px_rgb(62,43,33,0.04)] hover:shadow-[0_20px_50px_rgb(62,43,33,0.12)] transition-all duration-500 overflow-hidden cursor-pointer flex flex-col justify-between transform hover:-translate-y-1"
                       onClick={() => addItem(product)}
                     >
-                      <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-r from-[#F9E4C9] via-[#FDF5EA] to-[#E6F4EB] opacity-60" />
-
                       {/* Image */}
-                      <div className="relative h-32 overflow-hidden bg-gray-50">
+                      <div className="relative h-44 overflow-hidden bg-[#F3EDE5] rounded-t-[32px]">
                         <img
                           src={getProductImageUrl(product)}
                           alt={product.name}
-                          className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f291c]/50 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#3E2B21]/60 via-[#3E2B21]/20 to-transparent" />
+                        
+                        {/* Category Badge over image */}
+                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
+                           <p className="text-[9px] uppercase tracking-[0.2em] text-[#3E2B21] font-bold">
+                             {product.category?.name || "Menu"}
+                           </p>
+                        </div>
                       </div>
 
                       {/* Content */}
-                      <div className="relative p-4 flex flex-col gap-2 flex-1 justify-between">
+                      <div className="relative p-5 flex flex-col gap-2 flex-1 justify-between bg-gradient-to-b from-white to-[#FDFCF7]">
                         <div>
-                          <p className="text-[10px] uppercase tracking-[0.2em] text-[#5F6F65]/80 flex items-center gap-1.5 font-bold">
-                            <span className={`h-1.5 w-1.5 rounded-full ${categoryColorBg}`} />
-                            {product.category?.name || "Uncategorized"}
-                          </p>
-                          <h3 className="text-base font-bold text-[#1A4D2E] mt-1 leading-snug line-clamp-1" title={product.name}>
+                          <h3 className="text-lg font-black text-[#3E2B21] leading-snug line-clamp-1" title={product.name}>
                             {product.name}
                           </h3>
                           {product.description && (
-                            <p className="text-xs text-[#5F6F65] line-clamp-1 mt-0.5">
+                            <p className="text-xs text-[#8C8775] line-clamp-2 mt-1 leading-relaxed">
                               {product.description}
                             </p>
                           )}
                         </div>
 
-                        <div className="flex items-end justify-between mt-2 pt-2 border-t border-dashed border-gray-100">
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-dashed border-[#EBE4D5]">
                           <div>
-                            <p className="text-[9px] uppercase tracking-wider text-[#A08A6B] font-bold">Price</p>
-                            <p className="text-xl font-black text-[#1A4D2E]">
+                            <p className="text-[10px] uppercase tracking-wider text-[#8C8775] font-bold mb-0.5">Price</p>
+                            <p className="text-xl font-black text-[#3E2B21]">
                               ₹{Number(product.price).toFixed(2)}
                             </p>
                           </div>
                           <button
-                            className="h-9 w-9 bg-[#1A4D2E] rounded-full flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform"
+                            className="h-12 w-12 bg-[#3E2B21] rounded-[16px] flex items-center justify-center text-[#FDFCF7] shadow-[0_8px_20px_rgb(62,43,33,0.2)] group-hover:scale-105 group-hover:bg-[#2C1810] group-hover:rotate-3 transition-all duration-300"
                             onClick={(e) => {
                               e.stopPropagation();
                               addItem(product);
                             }}
                           >
-                            <Plus className="h-5 w-5" />
+                            <Plus className="h-6 w-6" />
                           </button>
                         </div>
                       </div>
@@ -287,9 +309,9 @@ export default function POSTerminalPage() {
               </div>
 
               {filteredProducts.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-[2rem] border border-[#E8F5E9] shadow-sm">
-                  <p className="text-lg font-bold text-[#1A4D2E]">No products match search criteria.</p>
-                  <p className="text-sm text-[#5F6F65] mt-1">Try another keyword or category filter.</p>
+                <div className="text-center py-20 bg-white rounded-[2rem] border border-[#EBE4D5] shadow-sm">
+                  <p className="text-lg font-bold text-[#3E2B21]">No products match search criteria.</p>
+                  <p className="text-sm text-[#8C8775] mt-1">Try another keyword or category filter.</p>
                 </div>
               )}
             </div>
@@ -299,7 +321,7 @@ export default function POSTerminalPage() {
 
       {/* Cart Sidebar */}
       {!loading && (
-        <CartSidebar onAddCustomer={() => setIsCustomerModalOpen(true)} />
+        <CartSidebar onAddCustomer={handleOpenCustomerModal} />
       )}
 
       {showCloseSessionModal && session && (

@@ -62,19 +62,29 @@ exports.closeSession = async (req, res) => {
         const { closingCash } = closeSessionSchema.parse(req.body);
         const userId = req.user?.id;
 
-        let session = await prisma.session.findUnique({ where: { id } });
+        let session = null;
+        
+        // Try to find by ID if it looks like a UUID
+        if (id && id !== 'undefined' && id !== 'active') {
+            try {
+                session = await prisma.session.findUnique({ where: { id } });
+            } catch (e) {
+                // Ignore UUID parsing errors and fallback
+            }
+        }
 
-        if (!session && userId && process.env.NODE_ENV !== 'production') {
+        // Fallback: Find the user's active session if ID not found or not provided
+        if (!session && userId) {
             session = await prisma.session.findFirst({
                 where: { userId, status: 'OPEN' },
-                orderBy: { createdAt: 'desc' }
+                orderBy: { startAt: 'desc' }
             });
         }
 
         if (!session) {
-            return res.status(200).json({
-                message: 'Session already closed',
-                alreadyClosed: true
+            return res.status(404).json({
+                error: 'NOT_FOUND',
+                message: 'No active session found to close'
             });
         }
 
@@ -96,14 +106,10 @@ exports.closeSession = async (req, res) => {
 
         res.json(updatedSession);
     } catch (error) {
-        if (error instanceof Error && /Unique constraint failed|Record to update not found/i.test(error.message)) {
-            return res.status(200).json({
-                message: 'Session already closed',
-                alreadyClosed: true
-            });
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: error.errors });
         }
-
-        res.status(400).json({ error: error.errors || error.message });
+        res.status(400).json({ error: error.message });
     }
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Coffee } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import CoffeeLoader from "@/components/ui/CoffeeLoader";
@@ -19,6 +20,21 @@ export default function POSSessionPage() {
   // Close session modal state
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [closingCash, setClosingCash] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    checkActiveSession();
+  }, []);
+
+  useEffect(() => {
+    let timer;
+    if (activeSession) {
+      timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [activeSession]);
 
   const formatErrorMessage = (err) => {
     if (!err) return "An unknown error occurred.";
@@ -33,10 +49,6 @@ export default function POSSessionPage() {
     if (err.message) return err.message;
     return JSON.stringify(err);
   };
-
-  useEffect(() => {
-    checkActiveSession();
-  }, []);
 
   const checkActiveSession = async () => {
     try {
@@ -256,28 +268,43 @@ export default function POSSessionPage() {
 
   if (checkingSession) {
     return (
-      <div className="flex items-center justify-center h-full bg-[#FBFBF2]">
+      <div className="flex items-center justify-center h-full bg-[#FDFCF7]">
         <CoffeeLoader size="lg" text="Checking Session..." />
       </div>
     );
   }
 
+  const getDuration = () => {
+    if (!activeSession) return "";
+    let diff = currentTime - new Date(activeSession.startAt);
+    if (diff < 0) diff = 0; // Prevent negative times if server clock is slightly ahead
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return `${h}h ${m}m ${s}s`;
+  };
+
   if (activeSession) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-[#FBFBF2]">
-         <div className="bg-white p-10 rounded-[2.5rem] shadow-xl text-center max-w-md w-full border border-[#E8F5E9]">
-             <div className="h-20 w-20 bg-[#4ADE80] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <Coffee className="h-10 w-10 text-white" />
+      <div className="flex flex-col items-center justify-center h-full bg-[#FDFCF7]">
+         <div className="bg-white p-10 rounded-[2.5rem] shadow-xl text-center max-w-md w-full border border-[#EBE4D5]">
+             <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg border border-[#EBE4D5] overflow-hidden p-2">
+                <Image src="/brew_and_bite_logo.png" alt="Logo" width={56} height={56} className="object-contain" />
              </div>
-             <h2 className="text-2xl font-bold text-[#1A4D2E] mb-2">Session Active</h2>
-             <p className="text-[#5F6F65] mb-8">
-               You have an open session on <span className="font-bold text-[#1A4D2E]">{activeSession.terminal?.name || 'Terminal'}</span>
+             <h2 className="text-2xl font-bold text-[#3E2B21] mb-2">Session Active</h2>
+             <p className="text-[#8C8775] mb-4">
+               You have an open session on <span className="font-bold text-[#3E2B21]">{activeSession.terminal?.name || 'Terminal'}</span>
              </p>
+             
+             <div className="bg-[#FDFCF7] border border-[#EBE4D5] rounded-2xl p-4 mb-8">
+                <p className="text-xs font-bold text-[#8C8775] uppercase tracking-widest mb-1">Shift Duration</p>
+                <p className="text-2xl font-black text-[#3E2B21]">{getDuration()}</p>
+             </div>
              
              <div className="flex flex-col gap-3">
                <button 
                   onClick={() => window.location.href = '/pos/terminal'}
-                  className="w-full py-4 bg-[#1A4D2E] text-white rounded-[2rem] font-bold hover:bg-[#143d24] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0"
+                  className="w-full py-4 bg-[#3E2B21] text-white rounded-[2rem] font-bold hover:bg-[#2C1810] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0"
                >
                  Continue Selling
                </button>
@@ -290,33 +317,75 @@ export default function POSSessionPage() {
                </button>
              </div>
          </div>
+
+         {/* Custom Close Session Modal */}
+         {showCloseModal && (
+           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+             <div className="bg-[#FAF9F6] rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 border border-[#EBE4D5]">
+               <div className="text-center mb-6">
+                 <h2 className="text-2xl font-black text-[#3E2B21]">Close Session</h2>
+                 <p className="text-[#8C8775] mt-1">Enter the closing cash amount in the drawer.</p>
+               </div>
+
+               <div className="mb-6">
+                 <div className="relative">
+                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8C8775] font-bold">₹</span>
+                   <input
+                     type="number"
+                     step="0.01"
+                     value={closingCash}
+                     onChange={(e) => setClosingCash(e.target.value)}
+                     placeholder="0.00"
+                     autoFocus
+                     className="w-full pl-10 pr-5 py-4 rounded-[2rem] bg-white border-2 border-[#EBE4D5] focus:border-[#3E2B21] focus:outline-none transition-all font-bold text-[#3E2B21]"
+                   />
+                 </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 <button
+                   onClick={() => setShowCloseModal(false)}
+                   className="px-6 py-4 bg-[#FDFCF7] text-[#8C8775] rounded-[2rem] font-bold hover:bg-[#EBE4D5] transition-colors border border-[#EBE4D5]"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   onClick={submitCloseSession}
+                   className="px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-[2rem] font-bold transition-colors shadow-lg"
+                 >
+                   Close Session
+                 </button>
+               </div>
+             </div>
+           </div>
+         )}
       </div>
     );
   }
 
   return (
-    <div className="h-full flex items-center justify-center bg-[#FBFBF2]">
-      <div className="bg-white p-12 rounded-[2.5rem] shadow-xl w-full max-w-lg border border-[#E8F5E9]">
+    <div className="h-full flex items-center justify-center bg-[#FDFCF7]">
+      <div className="bg-white p-12 rounded-[2.5rem] shadow-xl w-full max-w-lg border border-[#EBE4D5]">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-16 w-16 bg-[#E8F5E9] rounded-2xl flex items-center justify-center mb-4 transform rotate-3 shadow-lg">
-            <Coffee className="h-8 w-8 text-[#1A4D2E]" />
+          <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mb-4 transform rotate-3 shadow-lg border border-[#EBE4D5] overflow-hidden p-2">
+            <Image src="/brew_and_bite_logo.png" alt="Logo" width={48} height={48} className="object-contain" />
           </div>
-          <h1 className="text-3xl font-bold text-[#1A4D2E] tracking-tight">
+          <h1 className="text-3xl font-bold text-[#3E2B21] tracking-tight">
             Open Session
           </h1>
-          <p className="text-[#5F6F65] mt-2 font-medium">Select terminal to start selling</p>
+          <p className="text-[#8C8775] mt-2 font-medium">Select terminal to start selling</p>
         </div>
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-[#1A4D2E] mb-2 ml-1">
+            <label className="block text-sm font-bold text-[#3E2B21] mb-2 ml-1">
               Select Terminal
             </label>
             <div className="relative">
                 <select
                 value={selectedTerminal}
                 onChange={(e) => setSelectedTerminal(e.target.value)}
-                className="w-full px-5 py-4 rounded-[2rem] bg-[#FBFBF2] border-2 border-[#E8F5E9] focus:bg-white focus:border-[#1A4D2E] focus:outline-none transition-all font-semibold text-[#1A4D2E] appearance-none"
+                className="w-full px-5 py-4 rounded-[2rem] bg-[#FDFCF7] border-2 border-[#EBE4D5] focus:bg-white focus:border-[#3E2B21] focus:outline-none transition-all font-semibold text-[#3E2B21] appearance-none"
                 >
                 <option value="">Choose a terminal...</option>
                 {terminals.map((terminal) => (
@@ -325,23 +394,23 @@ export default function POSSessionPage() {
                     </option>
                 ))}
                 </select>
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[#5F6F65]">▼</div>
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-[#8C8775]">▼</div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-[#1A4D2E] mb-2 ml-1">
+            <label className="block text-sm font-bold text-[#3E2B21] mb-2 ml-1">
               Opening Cash
             </label>
             <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#5F6F65] font-bold">₹</span>
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8C8775] font-bold">₹</span>
                 <input
                 type="number"
                 step="0.01"
                 value={openingCash}
                 onChange={(e) => setOpeningCash(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-10 pr-5 py-4 rounded-[2rem] bg-[#FBFBF2] border-2 border-[#E8F5E9] focus:bg-white focus:border-[#1A4D2E] focus:outline-none transition-all font-bold text-[#1A4D2E]"
+                className="w-full pl-10 pr-5 py-4 rounded-[2rem] bg-[#FDFCF7] border-2 border-[#EBE4D5] focus:bg-white focus:border-[#3E2B21] focus:outline-none transition-all font-bold text-[#3E2B21]"
                 />
             </div>
           </div>
@@ -349,54 +418,12 @@ export default function POSSessionPage() {
           <button
             onClick={handleStartSession}
             disabled={!selectedTerminal || loading}
-            className="w-full bg-[#1A4D2E] text-white py-4 rounded-[2rem] font-bold text-lg hover:bg-[#143d24] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 mt-4"
+            className="w-full bg-[#3E2B21] text-white py-4 rounded-[2rem] font-bold text-lg hover:bg-[#2C1810] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 mt-4"
           >
             {loading ? 'Starting System...' : 'Start Session'}
           </button>
         </div>
       </div>
-
-      {/* Custom Close Session Modal */}
-      {showCloseModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-[#FAF9F6] rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 border border-coffee-200/50">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-black text-[#1A4D2E]">Close Session</h2>
-              <p className="text-[#5F6F65] mt-1">Enter the closing cash amount in the drawer.</p>
-            </div>
-
-            <div className="mb-6">
-              <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[#5F6F65] font-bold">₹</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={closingCash}
-                  onChange={(e) => setClosingCash(e.target.value)}
-                  placeholder="0.00"
-                  autoFocus
-                  className="w-full pl-10 pr-5 py-4 rounded-[2rem] bg-white border-2 border-[#E8F5E9] focus:border-[#1A4D2E] focus:outline-none transition-all font-bold text-[#1A4D2E]"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setShowCloseModal(false)}
-                className="px-6 py-4 bg-[#FBFBF2] text-[#5F6F65] rounded-[2rem] font-bold hover:bg-gray-100 transition-colors border border-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitCloseSession}
-                className="px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-[2rem] font-bold transition-colors shadow-lg"
-              >
-                Close Session
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

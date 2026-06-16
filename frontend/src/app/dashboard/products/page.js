@@ -50,7 +50,7 @@ export default function ProductsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setProducts(data);
+        setProducts(data.data || data);
       }
     } catch (error) {
       console.error('Failed to fetch products:', error);
@@ -70,7 +70,7 @@ export default function ProductsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setCategories(data);
+        setCategories(data.data || data);
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
@@ -487,11 +487,38 @@ export default function ProductsPage() {
       } else {
         const err = await response.json();
         console.error("Backend Error:", err);
-        showAlert(
-          `Failed to delete product: ${err.error || 'Unknown error'}\n\n(Note: You cannot delete products that are part of existing orders.)`,
-          "Delete Product",
-          "error"
-        );
+        
+        // If it can't be deleted due to historical orders, offer to mark it unavailable
+        if (err.error?.includes('existing orders') || response.status === 400) {
+          const markUnavailable = await showConfirm(
+            'This product has historical orders so it cannot be completely erased (to keep your sales charts accurate). Would you like to mark it as Unavailable instead so it stops showing up in active menus?', 
+            'Mark as Unavailable'
+          );
+          
+          if (markUnavailable) {
+            const updateRes = await fetch(`${API_URL}/products/${id}`, {
+              method: 'PUT',
+              headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ isAvailable: false })
+            });
+            
+            if (updateRes.ok) {
+              showToast("Product marked as unavailable.", "success");
+              fetchProducts();
+            } else {
+              showAlert("Failed to update product status.", "Update Product", "error");
+            }
+          }
+        } else {
+          showAlert(
+            `Failed to delete product: ${err.error || 'Unknown error'}`,
+            "Delete Product",
+            "error"
+          );
+        }
       }
     } catch (error) {
       console.error('Failed to delete product:', error);

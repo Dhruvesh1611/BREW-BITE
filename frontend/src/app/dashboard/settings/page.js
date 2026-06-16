@@ -55,11 +55,26 @@ export default function SettingsPage() {
         fetch(`${API_URL}/floors`, { headers })
       ]);
 
-      if (settingsRes.ok) setSettings(await settingsRes.json());
-      if (usersRes.ok) setUsers(await usersRes.json());
-      if (terminalsRes.ok) setTerminals(await terminalsRes.json());
-      if (catsRes.ok) setCategories(await catsRes.json());
-      if (floorsRes.ok) setFloors(await floorsRes.json());
+      if (settingsRes.ok) {
+        const json = await settingsRes.json();
+        setSettings(json.data || json);
+      }
+      if (usersRes.ok) {
+        const json = await usersRes.json();
+        setUsers(json.data || json);
+      }
+      if (terminalsRes.ok) {
+        const json = await terminalsRes.json();
+        setTerminals(json.data || json);
+      }
+      if (catsRes.ok) {
+        const json = await catsRes.json();
+        setCategories(json.data || json);
+      }
+      if (floorsRes.ok) {
+        const json = await floorsRes.json();
+        setFloors(json.data || json);
+      }
 
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -467,7 +482,7 @@ export default function SettingsPage() {
                       <label className="block text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase mb-2">Cafe Name</label>
                       <input
                         className="w-full px-4 py-3.5 rounded-[18px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none focus:ring-2 focus:ring-[#3E2B21]/10 bg-[#FDFCF7] text-sm font-medium text-[#3E2B21]"
-                        placeholder="e.g. Odoo Cafe"
+                        placeholder="e.g. Brew & Bite"
                         value={settings.cafeName || ""}
                         onChange={e => setSettings({ ...settings, cafeName: e.target.value })}
                       />

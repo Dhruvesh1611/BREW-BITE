@@ -203,7 +203,15 @@ export default function DashboardPage() {
 
         if (productsRes.ok) {
           const productsData = await productsRes.json();
-          setTopProducts(productsData);
+          // Map backend response { item, orders } to frontend expected { name, sold, category }
+          const mappedProducts = Array.isArray(productsData) 
+            ? productsData.map(p => ({
+                name: p.item || p.name || 'Unknown',
+                category: p.category || 'Item',
+                sold: p.orders || p.sold || 0
+              }))
+            : [];
+          setTopProducts(mappedProducts);
         }
 
         if (heatmapRes.ok) {
@@ -267,7 +275,7 @@ export default function DashboardPage() {
         <div className="relative flex-1 bg-[#FDFCF7] rounded-[32px] p-10 shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-[#F0EBE1] overflow-hidden flex flex-col justify-between min-h-[340px]">
           <div className="relative z-10 max-w-lg space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-transparent text-[#3E2B21] text-sm font-bold border border-[#EBE4D5]">
-              <span className="text-base">👋</span> Welcome back to Odoo Cafe
+              <span className="text-base">👋</span> Welcome back to Brew & Bite
             </div>
 
             <div>
@@ -359,11 +367,17 @@ export default function DashboardPage() {
           title={`${activeRange.charAt(0).toUpperCase() + activeRange.slice(1)}'s Revenue`} 
           value={`₹${stats?.periodRevenue || 0}`} 
           icon={TrendingUp} 
+          trend={stats?.trends?.revenue !== undefined ? `${Math.abs(stats.trends.revenue).toFixed(1)}%` : null}
+          trendUp={stats?.trends?.revenue >= 0}
+          trendLabel={`vs previous ${activeRange}`}
         />
         <StatsCard 
           title={`Orders (${activeRange})`} 
           value={stats?.periodOrders || 0} 
           icon={ShoppingBag} 
+          trend={stats?.trends?.orders !== undefined ? `${Math.abs(stats.trends.orders).toFixed(1)}%` : null}
+          trendUp={stats?.trends?.orders >= 0}
+          trendLabel={`vs previous ${activeRange}`}
         />
         <StatsCard title="Pending Orders" value={stats?.pendingOrders || 0} icon={Clock} />
         <StatsCard title="Preparing Orders" value={stats?.preparingOrders || 0} icon={ChefHat} />
@@ -371,6 +385,9 @@ export default function DashboardPage() {
           title={`Completed (${activeRange})`} 
           value={stats?.completedOrders || 0} 
           icon={CheckCircle} 
+          trend={stats?.trends?.completed !== undefined ? `${Math.abs(stats.trends.completed).toFixed(1)}%` : null}
+          trendUp={stats?.trends?.completed >= 0}
+          trendLabel={`vs previous ${activeRange}`}
         />
         <StatsCard title="Occupied Tables" value={stats?.occupiedTables || 0} icon={Users} />
         <StatsCard title="Available Tables" value={stats?.availableTables || 0} icon={Coffee} />
@@ -399,7 +416,7 @@ export default function DashboardPage() {
                 categories.length > 0
                   ? categories.map((cat, idx) => {
                       const key = cat.toLowerCase().replace(/\s+/g, '');
-                      const colors = ['#1A4D2E', '#F4A460', '#4ADE80', '#8B5CF6', '#F59E0B'];
+                      const colors = ['#3E2B21', '#C6A87C', '#8C8775', '#8B5CF6', '#F59E0B'];
                       return {
                         data: chartData.map((d) => d[key] || 0),
                         label: cat,
@@ -408,9 +425,9 @@ export default function DashboardPage() {
                       };
                     })
                   : [
-                      { data: chartData.map((d) => d.beverages || 0), label: "Beverages", color: "#1A4D2E" },
-                      { data: chartData.map((d) => d.food || 0), label: "Food", color: "#F4A460" },
-                      { data: chartData.map((d) => d.desserts || 0), label: "Desserts", color: "#4ADE80" },
+                      { data: chartData.map((d) => d.beverages || 0), label: "Beverages", color: "#3E2B21" },
+                      { data: chartData.map((d) => d.food || 0), label: "Food", color: "#C6A87C" },
+                      { data: chartData.map((d) => d.desserts || 0), label: "Desserts", color: "#8C8775" },
                     ]
               }
               margin={{ left: 60, right: 20, top: 40, bottom: 40 }}
@@ -431,7 +448,7 @@ export default function DashboardPage() {
                 <h3 className="text-xl font-bold text-[#3E2B21]">Top Selling Products</h3>
                 <p className="text-[#8C8775] text-sm mt-1 font-medium">Your most popular items by volume.</p>
               </div>
-              <Sparkles className="h-6 w-6 text-[#1A4D2E]" />
+              <Sparkles className="h-6 w-6 text-[#3E2B21]" />
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 flex-1">
@@ -451,7 +468,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-[#8C8775] font-medium">{product.category}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-black text-[#1A4D2E] text-sm">{product.sold}</p>
+                        <p className="font-black text-[#3E2B21] text-sm">{product.sold}</p>
                         <p className="text-[10px] text-[#8C8775] font-medium">sold</p>
                       </div>
                     </div>
@@ -481,6 +498,13 @@ export default function DashboardPage() {
                       },
                     ]}
                     height={250}
+                    margin={{ right: 150 }}
+                    slotProps={{
+                      legend: {
+                        direction: 'column',
+                        position: { vertical: 'middle', horizontal: 'right' },
+                      },
+                    }}
                   />
                 ) : (
                   <div className="text-center">
@@ -488,9 +512,9 @@ export default function DashboardPage() {
                       series={[
                         {
                           data: [
-                            { id: 0, value: 30, label: "Coffee", color: "#1A4D2E" },
-                            { id: 1, value: 20, label: "Tea", color: "#F4A460" },
-                            { id: 2, value: 15, label: "Snacks", color: "#4ADE80" },
+                            { id: 0, value: 30, label: "Coffee", color: "#3E2B21" },
+                            { id: 1, value: 20, label: "Tea", color: "#C6A87C" },
+                            { id: 2, value: 15, label: "Snacks", color: "#8C8775" },
                           ],
                           innerRadius: 30,
                           outerRadius: 100,
@@ -499,6 +523,13 @@ export default function DashboardPage() {
                         },
                       ]}
                       height={250}
+                      margin={{ right: 150 }}
+                      slotProps={{
+                        legend: {
+                          direction: 'column',
+                          position: { vertical: 'middle', horizontal: 'right' },
+                        },
+                      }}
                     />
                     <p className="text-xs text-[#8C8775] mt-2 font-bold italic">Sample Data</p>
                   </div>
@@ -519,16 +550,17 @@ export default function DashboardPage() {
               <div className="flex-1 min-h-[280px]">
                 <ResponsiveHeatMap
                   data={heatmapData}
-                  margin={{ top: 20, right: 10, bottom: 20, left: 40 }}
+                  margin={{ top: 20, right: 10, bottom: 50, left: 40 }}
                   valueFormat=">-.0f"
                   axisTop={null}
                   axisRight={null}
                   axisBottom={{
                     tickSize: 5,
                     tickPadding: 5,
-                    tickRotation: 0,
+                    tickRotation: -45,
                     legendPosition: 'middle',
-                    legendOffset: 46
+                    legendOffset: 46,
+                    tickValues: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00']
                   }}
                   axisLeft={{
                     tickSize: 5,
@@ -537,9 +569,9 @@ export default function DashboardPage() {
                   }}
                   colors={{
                     type: 'sequential',
-                    scheme: 'greens',
+                    scheme: 'oranges',
                     minValue: 0,
-                    maxValue: 50
+                    maxValue: Math.max(...heatmapData.flatMap(d => d.data.map(h => h.y)), 10)
                   }}
                   emptyColor="#FDFCF7"
                   borderColor="#ffffff"

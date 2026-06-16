@@ -13,7 +13,8 @@ import {
   LayoutDashboard,
   Receipt,
   Settings,
-  ShoppingCart
+  ShoppingCart,
+  Coffee
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import CloseSessionModal from "@/components/pos/CloseSessionModal";
@@ -72,37 +73,27 @@ export default function POSSidebar() {
   return (
     <aside
       className={`${isSidebarOpen ? "w-64" : "w-20"
-        } relative sidebar-aurora text-white shadow-[0_20px_50px_rgba(9,22,15,0.45)] transition-all duration-500 flex flex-col rounded-[26px] my-4 ml-4 h-[calc(100vh-2rem)] overflow-hidden border border-white/10 shrink-0 z-50`}
+        } relative bg-[#3E2B21] text-[#FDFCF7] shadow-[20px_0_40px_rgba(62,43,33,0.08)] transition-all duration-500 flex flex-col rounded-[26px] my-4 ml-4 h-[calc(100vh-2rem)] overflow-hidden shrink-0 z-50`}
     >
-      <div className="absolute inset-0 pointer-events-none">
-        <span className="floating-orb absolute -right-6 top-24 h-24 w-24 rounded-full bg-white/10 blur-3xl" />
-        <span className="floating-orb absolute left-6 bottom-10 h-32 w-32 rounded-full bg-[#F4B860]/20 blur-3xl delay-150" />
-      </div>
-
       {/* Logo + Toggle */}
-      <div className="px-5 py-4 flex items-center justify-between relative z-10">
+      <div className="px-5 py-6 flex items-center justify-between relative z-10 border-b border-[#2C1810]/50 mb-2">
         {isSidebarOpen && (
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-white border border-white/40 flex items-center justify-center shadow-lg">
-              <Image
-                src="/odoo_cafe_logo.png"
-                alt="Logo"
-                width={48}
-                height={48}
-                className="object-contain"
-              />
+            <div className="h-12 w-12 rounded-[16px] bg-[#FDFCF7] flex items-center justify-center shadow-sm overflow-hidden p-1.5">
+              <Image src="/brew_and_bite_logo.png" alt="Logo" width={40} height={40} className="object-contain" />
             </div>
-            <p className="text-sm font-bold tracking-[0.2em] uppercase text-white">
-              POS Terminal
-            </p>
+            <div>
+              <p className="text-base font-black text-[#FDFCF7] leading-none">BREW & BITE</p>
+              <p className="text-[10px] text-[#8C8775] font-bold tracking-wider uppercase mt-1">Smart Point</p>
+            </div>
           </div>
         )}
 
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`p-2 rounded-2xl border border-white/30 backdrop-blur ${isSidebarOpen
-              ? "bg-white/10 hover:bg-white/20"
-              : "bg-white/20 hover:bg-white/30 mx-auto"
+          className={`p-2 rounded-xl border border-transparent transition-all ${isSidebarOpen
+              ? "hover:bg-[#2C1810] text-[#8C8775] hover:text-[#FDFCF7]"
+              : "hover:bg-[#2C1810] text-[#8C8775] hover:text-[#FDFCF7] mx-auto"
             }`}
         >
           <Menu className="h-6 w-6" />
@@ -110,7 +101,7 @@ export default function POSSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-2 relative z-10 mt-4">
+      <nav className="flex-1 px-4 space-y-2 relative z-10 mt-2">
         {posSidebarItems.map((item) => {
           const isActive = pathname === item.href;
 
@@ -118,20 +109,20 @@ export default function POSSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center p-3 rounded-2xl transition-all duration-300 group backdrop-blur ${isActive
-                  ? "bg-white text-[#1A4D2E] shadow-[0_20px_40px_rgba(0,0,0,0.25)] border border-white/80"
-                  : "bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
+              className={`flex items-center p-4 rounded-full transition-all duration-300 group ${isActive
+                  ? "bg-[#FDFCF7] text-[#3E2B21]"
+                  : "text-[#8C8775] hover:text-[#FDFCF7] hover:bg-[#2C1810]"
                 }`}
             >
               <item.icon
-                className={`h-6 w-6 ${isActive
-                  ? "text-[#1A4D2E]"
-                  : "text-white/70 group-hover:text-white"
+                className={`h-5 w-5 ${isActive
+                  ? "text-[#3E2B21]"
+                  : "text-[#8C8775] group-hover:text-[#FDFCF7]"
                   }`}
               />
 
               {isSidebarOpen && (
-                <span className="ml-4 text-base font-medium">{item.label}</span>
+                <span className="ml-4 text-sm font-bold">{item.label}</span>
               )}
             </Link>
           );
@@ -146,12 +137,12 @@ export default function POSSidebar() {
               <p className="text-xs text-white/60 font-semibold uppercase tracking-wider">Shift Sales</p>
               <p className="text-2xl font-bold text-white">₹{shiftSales.toFixed(2)}</p>
             </div>
-            <div className="h-8 w-8 bg-green-400/20 rounded-full flex items-center justify-center">
-              <ShoppingBag className="h-4 w-4 text-green-300" />
+            <div className="h-8 w-8 bg-[#D4A373]/20 rounded-full flex items-center justify-center">
+              <ShoppingBag className="h-4 w-4 text-[#D4A373]" />
             </div>
           </div>
           <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-green-400 w-3/4"></div>
+            <div className="h-full bg-[#D4A373] w-3/4"></div>
           </div>
           <p className="text-[10px] text-white/50 mt-2 text-right">Target: ₹1,500</p>
         </div>
@@ -161,7 +152,7 @@ export default function POSSidebar() {
       <div className="p-4 border-t border-white/20 mx-3 mb-4 relative z-10">
         <div className={`flex items-center ${!isSidebarOpen && "justify-center"}`}>
           <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
-            <div className="h-3 w-3 rounded-full bg-green-400 animate-pulse"></div>
+            <div className="h-3 w-3 rounded-full bg-[#D4A373] animate-pulse"></div>
           </div>
           {isSidebarOpen && (
             <div className="ml-3">

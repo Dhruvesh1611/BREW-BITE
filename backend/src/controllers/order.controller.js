@@ -371,6 +371,48 @@ exports.getOrders = async (req, res) => {
   }
 };
 
+exports.getOrderStats = async (req, res) => {
+  try {
+    const shopId = req.user?.shopId;
+    let orderWhere = {};
+    if (shopId) {
+      const shopUsers = await prisma.user.findMany({
+        where: { shopId },
+        select: { id: true }
+      });
+      const userIds = shopUsers.map(u => u.id);
+      orderWhere = { userId: { in: userIds } };
+    }
+
+    const counts = await prisma.order.groupBy({
+      by: ['status'],
+      _count: true,
+      where: orderWhere
+    });
+
+    const stats = {
+      DRAFT: 0,
+      SENT: 0,
+      PREPARING: 0,
+      COMPLETED: 0,
+      PAID: 0,
+      CANCELLED: 0,
+      total: 0
+    };
+
+    counts.forEach(c => {
+      stats[c.status] = c._count;
+      stats.total += c._count;
+    });
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Get order stats error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 exports.getOrderById = async (req, res) => {
   try {
     const { id } = req.params;

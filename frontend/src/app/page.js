@@ -56,12 +56,12 @@ export default function Home() {
           >
             <div className="flex items-center justify-center mb-10">
               <div className="h-28 w-28 rounded-[32px] bg-[#3E2B21] flex items-center justify-center shadow-[0_25px_60px_rgba(62,43,33,0.4)] rotate-3 hover:rotate-0 transition-transform duration-500">
-                <Image src="/odoo_cafe_logo.png" alt="logo" width={100} height={100} className="object-contain brightness-0 invert" />
+                <Image src="/brew_and_bite_logo.png" alt="logo" width={100} height={100} className="object-contain brightness-0 invert" />
               </div>
             </div>
 
             <h1 className="text-5xl lg:text-7xl font-black mb-6 text-white tracking-tight font-serif">
-              Odoo Cafe
+              Brew & Bite
               <span className="block text-2xl lg:text-3xl font-medium mt-3 text-white/80 font-sans">Smart POS System</span>
             </h1>
 
@@ -132,7 +132,7 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl lg:text-5xl font-black mb-6 text-white font-serif tracking-tight">
-              Join the Odoo Cafe Family
+              Join the Brew & Bite Family
             </h2>
             <p className="text-lg lg:text-xl text-white/60 mb-12 max-w-2xl mx-auto font-medium">
               Ready to elevate your coffee experience? Sign in to manage your orders efficiently.

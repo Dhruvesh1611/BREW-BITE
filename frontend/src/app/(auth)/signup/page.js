@@ -48,7 +48,7 @@ export default function SignupPage() {
               Create Account
             </h2>
             <p className="mt-2 text-sm text-[#3E2B21]/40 font-medium">
-              Join Odoo Cafe today.
+              Join Brew & Bite today.
             </p>
 
             {error && (
@@ -104,7 +104,7 @@ export default function SignupPage() {
               <Input
                 {...register("email")}
                 type="email"
-                placeholder="barista@odoocafe.com"
+                placeholder="barista@brewandbite.com"
                 className="h-14 rounded-[18px] border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:ring-[#3E2B21]/10 bg-[#FDFCF7] text-sm font-medium text-[#3E2B21] placeholder:text-[#3E2B21]/25"
               />
             </div>
@@ -184,7 +184,7 @@ export default function SignupPage() {
           >
             <div className="h-20 w-20 rounded-[24px] bg-white/10 backdrop-blur-md flex items-center justify-center shadow-2xl border border-white/10">
               <Image
-                src="/odoo_cafe_logo.png"
+                src="/brew_and_bite_logo.png"
                 alt="logo"
                 width={64}
                 height={64}

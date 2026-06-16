@@ -270,41 +270,41 @@ export default function TablesPage() {
   };
 
   return (
-    <div className="h-full bg-[#FBFBF2] relative p-6">
+    <div className="h-full bg-[#FDFCF7] relative p-6 flex flex-col overflow-hidden">
 
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 shrink-0">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-black text-[#1A4D2E] tracking-tight">
+            <h1 className="text-3xl font-black text-[#3E2B21] tracking-tight">
               Table Layout
             </h1>
-            <p className="text-[#5F6F65] mt-1">Select a table to manage its cart or start order</p>
+            <p className="text-[#8C8775] mt-1">Select a table to manage its cart or start order</p>
           </div>
           <div className="flex gap-3">
             <button
               onClick={() => setShowTransferModal(true)}
-              className="px-5 py-3 bg-white border-2 border-[#E8F5E9] text-[#1A4D2E] rounded-2xl font-bold flex items-center gap-2 hover:bg-[#E8F5E9] hover:border-[#1A4D2E] transition-all shadow-md"
+              className="px-5 py-3 bg-white border-2 border-[#EBE4D5] text-[#3E2B21] rounded-2xl font-bold flex items-center gap-2 hover:bg-[#EBE4D5] hover:border-[#3E2B21] transition-all shadow-md"
             >
               <Shuffle className="h-5 w-5" />
               Transfer Order
             </button>
-            <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-[#E8F5E9]">
-              <Coffee className="h-8 w-8 text-[#1A4D2E]" />
+            <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-[#EBE4D5]">
+              <Coffee className="h-8 w-8 text-[#3E2B21]" />
             </div>
           </div>
         </div>
 
         {/* Floor Tabs */}
-        <div className="bg-white rounded-[2rem] p-2 shadow-lg inline-flex gap-2 border border-[#E8F5E9]">
+        <div className="bg-white rounded-[2rem] p-2 shadow-lg inline-flex gap-2 border border-[#EBE4D5]">
           {floors.map((floor) => (
             <button
               key={floor.id}
               onClick={() => setSelectedFloor(floor.id)}
               className={`px-8 py-4 rounded-[2rem] font-black transition-all duration-300 ${
                 selectedFloor === floor.id
-                  ? 'bg-[#1A4D2E] text-white shadow-lg transform scale-105'
-                  : 'text-[#5F6F65] hover:bg-[#E8F5E9]'
+                  ? 'bg-[#3E2B21] text-white shadow-lg transform scale-105'
+                  : 'text-[#8C8775] hover:bg-[#EBE4D5]'
               }`}
             >
               {floor.name}
@@ -319,8 +319,8 @@ export default function TablesPage() {
           <CoffeeLoader size="lg" text="Setting Tables..." />
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="w-full flex-1 overflow-y-auto pr-4 pb-20 scrollbar-thin scrollbar-thumb-[#EBE4D5] scrollbar-track-transparent">
+          <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {currentFloor?.tables?.map((table) => {
               const statusStyle = getTableStatusColor(table.status);
               const badgeText = getTableBadge(table.status);
@@ -329,26 +329,22 @@ export default function TablesPage() {
                 <div
                   key={table.id}
                   onClick={() => handleTableSelect(table)}
-                  className={`group bg-white rounded-[2.5rem] p-6 shadow-md transition-all duration-300 hover:-translate-y-2 border-2 ${statusStyle} cursor-pointer flex flex-col justify-between h-72 relative`}
+                  className={`group bg-white rounded-[3rem] p-5 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-2 border-[3px] ${statusStyle} cursor-pointer flex flex-col items-center justify-center text-center aspect-square relative`}
                 >
-                  <div>
-                    {/* Header: Table Name & Seats */}
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-2xl font-black">{table.name}</h3>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/60 backdrop-blur rounded-full text-xs font-bold border">
-                        <Users className="h-3.5 w-3.5" />
-                        <span>{table.seats}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Status Badge */}
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider mt-4 bg-white/80 border">
+                  {/* Seats Indicator */}
+                  <div className="absolute top-5 right-5 flex items-center gap-1.5 text-xs font-black opacity-80 bg-white/60 backdrop-blur px-2 py-1 rounded-full border border-inherit">
+                    <Users className="h-3 w-3" />
+                    <span>{table.seats}</span>
+                  </div>
+
+                  <div className="flex-1 flex flex-col items-center justify-center w-full mt-4">
+                    <h3 className="text-2xl font-black mb-2">{table.name}</h3>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/90 shadow-sm border border-inherit">
                       {badgeText}
                     </span>
                   </div>
 
-                  {/* Manual Reservation / Free Table Button */}
-                  <div className="flex justify-between items-center mt-6">
+                  <div className="w-full mt-auto">
                     {table.status === 'OCCUPIED' ? (
                       canFreeTable && (
                         <button
@@ -356,7 +352,7 @@ export default function TablesPage() {
                             e.stopPropagation();
                             handleFreeTableConfirm(table);
                           }}
-                          className="text-xs font-bold px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all shadow-md"
+                          className="w-full text-[11px] font-black uppercase tracking-wider py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-2xl transition-all shadow-md"
                         >
                           Free Table
                         </button>
@@ -364,17 +360,17 @@ export default function TablesPage() {
                     ) : (
                       <button
                         onClick={(e) => toggleReservation(e, table)}
-                        className={`text-xs font-bold px-4 py-2 rounded-xl border-2 transition-all ${
+                        className={`w-full text-[11px] font-black uppercase tracking-wider py-2.5 rounded-2xl border-2 transition-all ${
                           table.status === 'RESERVED'
                             ? 'bg-[#F59E0B] text-white border-transparent'
-                            : 'bg-white text-[#5F6F65] border-gray-200 hover:border-[#1A4D2E] hover:text-[#1A4D2E]'
+                            : 'bg-white text-[#8C8775] border-[#EBE4D5] hover:border-[#3E2B21] hover:text-[#3E2B21] hover:bg-[#FDFCF7]'
                         }`}
                       >
                         {table.status === 'RESERVED' ? 'Unreserve' : 'Reserve'}
                       </button>
                     )}
                     {table.status === 'OCCUPIED' && table.orders?.[0] && (
-                      <span className="text-sm font-black text-[#1A4D2E]">
+                      <span className="block text-sm font-black text-[#3E2B21] mt-2">
                         ₹{Number(table.orders[0].totalAmount).toFixed(2)}
                       </span>
                     )}
@@ -387,7 +383,7 @@ export default function TablesPage() {
           {(!currentFloor?.tables || currentFloor.tables.length === 0) && (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🏪</div>
-              <p className="text-[#5F6F65] text-lg">No tables available on this floor</p>
+              <p className="text-[#8C8775] text-lg font-bold">No tables available on this floor</p>
             </div>
           )}
         </div>
@@ -396,22 +392,22 @@ export default function TablesPage() {
       {/* Table Transfer Modal */}
       {showTransferModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full p-8 border border-[#E8F5E9]">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full p-8 border border-[#EBE4D5]">
             <div className="text-center mb-6">
-              <div className="h-16 w-16 bg-[#E8F5E9] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Shuffle className="h-8 w-8 text-[#1A4D2E]" />
+              <div className="h-16 w-16 bg-[#EBE4D5] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Shuffle className="h-8 w-8 text-[#3E2B21]" />
               </div>
-              <h2 className="text-2xl font-black text-[#1A4D2E]">Transfer Order</h2>
-              <p className="text-[#5F6F65]">Move active order to another table</p>
+              <h2 className="text-2xl font-black text-[#3E2B21]">Transfer Order</h2>
+              <p className="text-[#8C8775]">Move active order to another table</p>
             </div>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-bold text-[#1A4D2E] mb-2">From Table (Occupied)</label>
+                <label className="block text-sm font-bold text-[#3E2B21] mb-2">From Table (Occupied)</label>
                 <select
                   value={transferSource}
                   onChange={(e) => setTransferSource(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-[#1A4D2E] focus:outline-none bg-white font-semibold"
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-[#3E2B21] focus:outline-none bg-white font-semibold"
                 >
                   <option value="">Select source table</option>
                   {floors.flatMap(f => f.tables)
@@ -424,11 +420,11 @@ export default function TablesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[#1A4D2E] mb-2">To Table (Available)</label>
+                <label className="block text-sm font-bold text-[#3E2B21] mb-2">To Table (Available)</label>
                 <select
                   value={transferDest}
                   onChange={(e) => setTransferDest(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-[#1A4D2E] focus:outline-none bg-white font-semibold"
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-[#3E2B21] focus:outline-none bg-white font-semibold"
                 >
                   <option value="">Select target table</option>
                   {floors.flatMap(f => f.tables)
@@ -444,14 +440,14 @@ export default function TablesPage() {
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => { setShowTransferModal(false); setTransferSource(""); setTransferDest(""); }}
-                className="px-6 py-4 bg-[#FBFBF2] text-[#5F6F65] rounded-[2rem] font-bold hover:bg-[#E8F5E9] transition-colors border border-[#E8F5E9]"
+                className="px-6 py-4 bg-[#FDFCF7] text-[#8C8775] rounded-[2rem] font-bold hover:bg-[#EBE4D5] transition-colors border border-[#EBE4D5]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleTransfer}
                 disabled={!transferSource || !transferDest}
-                className="px-6 py-4 bg-[#1A4D2E] text-white rounded-[2rem] font-bold hover:bg-[#143D24] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-lg"
+                className="px-6 py-4 bg-[#3E2B21] text-white rounded-[2rem] font-bold hover:bg-[#2C1810] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-lg"
               >
                 Transfer
               </button>

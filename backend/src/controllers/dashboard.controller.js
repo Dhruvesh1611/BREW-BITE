@@ -7,18 +7,29 @@ exports.getStats = async (req, res) => {
     const now = new Date();
     let startDate = new Date();
     
+    let prevStartDate = new Date(startDate);
+    let prevEndDate = new Date(now);
+
     // Determine start date based on range
     if (range === 'day') {
       startDate.setHours(0, 0, 0, 0);
+      prevStartDate.setDate(startDate.getDate() - 1);
+      prevEndDate = new Date(startDate);
     } else if (range === 'week') {
       startDate.setDate(now.getDate() - 7);
       startDate.setHours(0, 0, 0, 0);
+      prevStartDate.setDate(startDate.getDate() - 7);
+      prevEndDate = new Date(startDate);
     } else if (range === 'month') {
       startDate.setDate(now.getDate() - 30);
       startDate.setHours(0, 0, 0, 0);
+      prevStartDate.setDate(startDate.getDate() - 30);
+      prevEndDate = new Date(startDate);
     } else if (range === 'year') {
       startDate.setFullYear(now.getFullYear() - 1);
       startDate.setHours(0, 0, 0, 0);
+      prevStartDate.setFullYear(startDate.getFullYear() - 1);
+      prevEndDate = new Date(startDate);
     }
 
     // Multi-tenant filtering: Get all user IDs belonging to this shop
@@ -38,6 +49,12 @@ exports.getStats = async (req, res) => {
       ...orderWhere
     };
 
+    const prevPeriodStatusWhere = {
+      status: { in: ['PAID', 'COMPLETED'] },
+      createdAt: { gte: prevStartDate, lt: prevEndDate },
+      ...orderWhere
+    };
+
     const [
       totalRevenue,
       periodRevenue,
@@ -47,7 +64,10 @@ exports.getStats = async (req, res) => {
       completedOrdersInPeriod,
       occupiedTables,
       availableTables,
-      totalUsers
+      totalUsers,
+      prevPeriodRevenueAgg,
+      prevPeriodOrdersCount,
+      prevCompletedOrdersCount
     ] = await Promise.all([
       // Total Revenue (all time PAID/COMPLETED orders)
       prisma.order.aggregate({
@@ -99,20 +119,54 @@ exports.getStats = async (req, res) => {
       // Total Users in this shop
       prisma.user.count({
         where: shopId ? { shopId } : {}
+      }),
+      // Previous Period Revenue (PAID/COMPLETED in prev range)
+      prisma.order.aggregate({
+        _sum: { totalAmount: true },
+        where: prevPeriodStatusWhere
+      }),
+      // Previous Period Orders (Total orders in prev range except CANCELLED)
+      prisma.order.count({
+        where: { 
+          createdAt: { gte: prevStartDate, lt: prevEndDate },
+          status: { not: 'CANCELLED' },
+          ...orderWhere
+        }
+      }),
+      // Previous Completed Orders in this period
+      prisma.order.count({
+        where: prevPeriodStatusWhere
       })
     ]);
 
+    const getPercent = (current, previous) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return ((current - previous) / previous) * 100;
+    };
+
+    const prevRev = Number(prevPeriodRevenueAgg._sum.totalAmount || 0);
+    const currRev = Number(periodRevenue._sum.totalAmount || 0);
+    const prevOrders = Number(prevPeriodOrdersCount || 0);
+    const currOrders = Number(periodOrders || 0);
+    const prevCompleted = Number(prevCompletedOrdersCount || 0);
+    const currCompleted = Number(completedOrdersInPeriod || 0);
+
     res.json({
       totalRevenue: Number(totalRevenue._sum.totalAmount || 0),
-      periodRevenue: Number(periodRevenue._sum.totalAmount || 0),
-      periodOrders: Number(periodOrders || 0),
+      periodRevenue: currRev,
+      periodOrders: currOrders,
       pendingOrders: Number(pendingOrders || 0),
       preparingOrders: Number(preparingOrders || 0),
-      completedOrders: Number(completedOrdersInPeriod || 0),
+      completedOrders: currCompleted,
       occupiedTables: Number(occupiedTables || 0),
       availableTables: Number(availableTables || 0),
-      totalOrders: Number(periodOrders || 0), // Fallback for hero section
-      totalUsers: Number(totalUsers || 0)      // Fallback for hero section
+      totalOrders: currOrders, // Fallback for hero section
+      totalUsers: Number(totalUsers || 0),      // Fallback for hero section
+      trends: {
+        revenue: getPercent(currRev, prevRev),
+        orders: getPercent(currOrders, prevOrders),
+        completed: getPercent(currCompleted, prevCompleted)
+      }
     });
   } catch (error) {
     console.error("Dashboard Stats Error:", error);

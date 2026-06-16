@@ -88,14 +88,14 @@ export default function POSOrdersPage() {
 
     const getStatusBadgeClass = (status) => {
       const statusClasses = {
-        DRAFT: "bg-[#FBFBF2] text-[#1A4D2E] border border-[#E8F5E9]",
-        SENT: "bg-[#E8F5E9] text-[#1A4D2E] border border-[#4ADE80]",
-        PREPARING: "bg-[#FBFBF2] text-[#5F6F65] border border-[#E8F5E9]",
-        COMPLETED: "bg-[#E8F5E9] text-[#1A4D2E] border border-[#4ADE80]",
-        PAID: "bg-[#E8F5E9] text-[#1A4D2E] border border-[#4ADE80]",
+        DRAFT: "bg-[#FDFCF7] text-[#3E2B21] border border-[#EBE4D5]",
+        SENT: "bg-[#EBE4D5] text-[#3E2B21] border border-[#C4A882]",
+        PREPARING: "bg-[#FDFCF7] text-[#8C8775] border border-[#EBE4D5]",
+        COMPLETED: "bg-[#EBE4D5] text-[#3E2B21] border border-[#C4A882]",
+        PAID: "bg-[#EBE4D5] text-[#3E2B21] border border-[#C4A882]",
         CANCELLED: "bg-red-50 text-red-600 border border-red-100",
       };
-      return statusClasses[status] || "bg-[#FBFBF2] text-[#5F6F65] border border-[#E8F5E9]";
+      return statusClasses[status] || "bg-[#FDFCF7] text-[#8C8775] border border-[#EBE4D5]";
     };
 
     const handleEmailReceipt = async () => {
@@ -114,16 +114,16 @@ export default function POSOrdersPage() {
         onClick={onClose}
       >
         <div
-          className="bg-white rounded-[2.5rem] max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col border border-[#E8F5E9]"
+          className="bg-white rounded-[2.5rem] max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col border border-[#EBE4D5]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="p-5 border-b border-[#E8F5E9] flex items-center justify-between sticky top-0 bg-white z-10">
+          <div className="p-5 border-b border-[#EBE4D5] flex items-center justify-between sticky top-0 bg-white z-10">
             <div>
-              <h2 className="text-xl font-bold text-[#1A4D2E]">Order Details</h2>
-              <p className="text-sm text-[#5F6F65]">{order.orderNumber}</p>
+              <h2 className="text-xl font-bold text-[#3E2B21]">Order Details</h2>
+              <p className="text-sm text-[#8C8775]">{order.orderNumber}</p>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-[#FBFBF2] rounded-full text-[#5F6F65] transition-colors">
+            <button onClick={onClose} className="p-2 hover:bg-[#FDFCF7] rounded-full text-[#8C8775] transition-colors">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -134,28 +134,28 @@ export default function POSOrdersPage() {
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeClass(order.status)}`}>
                 {order.status}
               </span>
-              <span className="text-sm text-[#5F6F65]">{new Date(order.createdAt).toLocaleString()}</span>
+              <span className="text-sm text-[#8C8775]">{new Date(order.createdAt).toLocaleString()}</span>
             </div>
 
             {/* Customer Info */}
             {(order.table || order.customerName) && (
-              <div className="bg-[#FBFBF2] p-4 rounded-xl space-y-2 border border-[#E8F5E9]">
+              <div className="bg-[#FDFCF7] p-4 rounded-xl space-y-2 border border-[#EBE4D5]">
                 {order.table && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#5F6F65]">Table</span>
-                    <span className="font-bold text-[#1A4D2E]">{order.table.name}</span>
+                    <span className="text-[#8C8775]">Table</span>
+                    <span className="font-bold text-[#3E2B21]">{order.table.name}</span>
                   </div>
                 )}
                 {order.customerName && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#5F6F65]">Customer</span>
-                    <span className="font-bold text-[#1A4D2E]">{order.customerName}</span>
+                    <span className="text-[#8C8775]">Customer</span>
+                    <span className="font-bold text-[#3E2B21]">{order.customerName}</span>
                   </div>
                 )}
                 {order.customerEmail && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#5F6F65]">Email</span>
-                    <span className="text-[#5F6F65]">{order.customerEmail}</span>
+                    <span className="text-[#8C8775]">Email</span>
+                    <span className="text-[#8C8775]">{order.customerEmail}</span>
                   </div>
                 )}
               </div>
@@ -163,28 +163,28 @@ export default function POSOrdersPage() {
 
             {/* Items */}
             <div>
-              <h3 className="font-bold text-[#1A4D2E] mb-3">Items</h3>
+              <h3 className="font-bold text-[#3E2B21] mb-3">Items</h3>
               <div className="space-y-3">
                 {order.items?.map((item) => (
                   <div key={item.id} className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-3">
-                      <span className="h-6 w-6 flex items-center justify-center bg-[#E8F5E9] text-[#1A4D2E] rounded text-xs font-bold">
+                      <span className="h-6 w-6 flex items-center justify-center bg-[#EBE4D5] text-[#3E2B21] rounded text-xs font-bold">
                         {item.quantity}
                       </span>
                       <div>
-                        <p className="font-medium text-[#1A4D2E]">{item.productName}</p>
-                        {item.variantName && <p className="text-xs text-[#5F6F65]">{item.variantName}</p>}
+                        <p className="font-medium text-[#3E2B21]">{item.productName}</p>
+                        {item.variantName && <p className="text-xs text-[#8C8775]">{item.variantName}</p>}
                       </div>
                     </div>
-                    <p className="font-bold text-[#1A4D2E]">₹{(Number(item.price) * item.quantity).toFixed(2)}</p>
+                    <p className="font-bold text-[#3E2B21]">₹{(Number(item.price) * item.quantity).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Summary */}
-            <div className="border-t border-dashed border-[#E8F5E9] pt-4 space-y-2">
-              <div className="flex justify-between text-lg font-bold text-[#1A4D2E]">
+            <div className="border-t border-dashed border-[#EBE4D5] pt-4 space-y-2">
+              <div className="flex justify-between text-lg font-bold text-[#3E2B21]">
                 <span>Total</span>
                 <span>₹{Number(order.totalAmount).toFixed(2)}</span>
               </div>
@@ -192,7 +192,7 @@ export default function POSOrdersPage() {
           </div>
 
           {/* Footer Actions */}
-          <div className="p-5 border-t border-[#E8F5E9] bg-[#FBFBF2] space-y-3">
+          <div className="p-5 border-t border-[#EBE4D5] bg-[#FDFCF7] space-y-3">
             {order.status !== 'PAID' && order.status !== 'CANCELLED' && (
               <button
                 onClick={() => window.location.href = `/pos/payment?orderId=${order.id}`}
@@ -204,7 +204,7 @@ export default function POSOrdersPage() {
             )}
             <button
               onClick={handleEmailReceipt}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#1A4D2E] text-white font-bold hover:bg-[#143d24] transition-colors shadow-lg"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3E2B21] text-white font-bold hover:bg-[#2C1810] transition-colors shadow-lg"
             >
               <Download className="h-5 w-5" />
               Send via Email
@@ -216,46 +216,46 @@ export default function POSOrdersPage() {
   };
 
   return (
-    <div className="h-full flex flex-col gap-6 bg-[#FBFBF2]">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-[#1A4D2E]">Recent Orders</h1>
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#5F6F65]" />
+    <div className="h-full flex flex-col gap-6 bg-[#FDFCF7] p-6 lg:p-8">
+      <div className="flex items-center justify-between shrink-0">
+        <h1 className="text-3xl font-black text-[#3E2B21] tracking-tight">Recent Orders</h1>
+        <div className="relative min-w-[320px]">
+          <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#8C8775]" />
           <input
             placeholder="Search receipt #..."
-            className="pl-12 pr-4 py-3 rounded-[2rem] border-2 border-[#E8F5E9] bg-white focus:border-[#1A4D2E] outline-none w-64 shadow-sm focus:shadow-lg transition-all"
+            className="w-full pl-14 pr-5 py-3.5 rounded-[20px] border-2 border-white focus:border-[#3E2B21]/20 focus:outline-none transition-all bg-white shadow-[0_8px_30px_rgb(62,43,33,0.04)] font-semibold text-[#3E2B21] placeholder:text-[#8C8775]/60"
           />
         </div>
       </div>
 
-      <div className="flex-1 bg-white rounded-[2.5rem] shadow-xl border border-[#E8F5E9] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-[#E8F5E9] flex items-center justify-between bg-[#FBFBF2]">
-          <span className="font-bold text-[#1A4D2E]">History</span>
-          <button className="text-[#1A4D2E] font-bold text-sm hover:text-[#143d24] transition-colors">View All</button>
+      <div className="flex-1 bg-white rounded-[2.5rem] shadow-[0_10px_40px_rgba(62,43,33,0.03)] border border-[#EBE4D5] overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-[#EBE4D5] flex items-center justify-between bg-white z-10">
+          <span className="font-black text-[#3E2B21] text-lg">Order History</span>
+          <button className="text-[#8C8775] font-bold text-sm hover:text-[#3E2B21] transition-colors">View All</button>
         </div>
-        <div className="overflow-y-auto flex-1 p-4 space-y-2">
+        <div className="overflow-y-auto flex-1 p-6 space-y-4 scrollbar-thin scrollbar-thumb-[#EBE4D5] scrollbar-track-transparent">
           {orders.map(order => (
             <div
               key={order.id}
               onClick={() => setSelectedOrder(order)}
-              className="flex items-center justify-between p-4 hover:bg-[#FBFBF2] rounded-[2rem] transition-all duration-300 cursor-pointer border border-[#E8F5E9] hover:border-[#1A4D2E] group"
+              className="flex items-center justify-between p-5 bg-white hover:bg-[#FDFCF7] rounded-[24px] transition-all duration-300 cursor-pointer border border-[#EBE4D5] hover:border-[#3E2B21]/30 hover:shadow-md group"
             >
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 bg-[#E8F5E9] rounded-xl flex items-center justify-center text-[#1A4D2E]">
-                  <Receipt className="h-5 w-5" />
+              <div className="flex items-center gap-5">
+                <div className="h-12 w-12 bg-[#F3EDE5] rounded-2xl flex items-center justify-center text-[#3E2B21] shadow-sm">
+                  <Receipt className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="font-bold text-[#1A4D2E]">{order.displayId}</p>
-                  <div className="flex items-center gap-1 text-xs text-[#5F6F65]">
-                    <Clock className="h-3 w-3" /> {order.time} • {order.itemCountString}
+                  <p className="font-black text-[#3E2B21] text-lg">{order.displayId}</p>
+                  <div className="flex items-center gap-1.5 text-xs text-[#8C8775] font-bold mt-0.5">
+                    <Clock className="h-3.5 w-3.5" /> {order.time} • {order.itemCountString}
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-[#1A4D2E]">₹{order.totalFormatted}</p>
-                <span className={`text-xs px-2 py-1 rounded-full font-bold inline-block mt-1 ${order.status === 'COMPLETED' ? 'bg-[#E8F5E9] text-[#1A4D2E]' :
-                  order.status === 'PREPARING' ? 'bg-[#FBFBF2] text-[#5F6F65] border border-[#E8F5E9]' :
-                    'bg-[#FBFBF2] text-[#5F6F65] border border-[#E8F5E9]'
+              <div className="text-right flex flex-col items-end">
+                <p className="font-black text-[#3E2B21] text-lg">₹{order.totalFormatted}</p>
+                <span className={`text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-full font-black inline-block mt-2 ${order.status === 'COMPLETED' ? 'bg-[#EBE4D5] text-[#3E2B21] border border-[#C4A882]' :
+                  order.status === 'PREPARING' ? 'bg-[#FDFCF7] text-[#8C8775] border border-[#EBE4D5]' :
+                    'bg-[#FDFCF7] text-[#8C8775] border border-[#EBE4D5]'
                   }`}>
                   {order.status}
                 </span>
@@ -277,8 +277,8 @@ export default function POSOrdersPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
           <div className="bg-[#FAF9F6] rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 border border-coffee-200/50">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-black text-[#1A4D2E]">Send Email Receipt</h2>
-              <p className="text-[#5F6F65] mt-1">Please enter the customer's email address.</p>
+              <h2 className="text-2xl font-black text-[#3E2B21]">Send Email Receipt</h2>
+              <p className="text-[#8C8775] mt-1">Please enter the customer's email address.</p>
             </div>
 
             <div className="mb-6">
@@ -288,14 +288,14 @@ export default function POSOrdersPage() {
                 onChange={(e) => setEmailInput(e.target.value)}
                 placeholder="customer@example.com"
                 autoFocus
-                className="w-full px-5 py-4 rounded-[2rem] bg-white border-2 border-[#E8F5E9] focus:border-[#1A4D2E] focus:outline-none transition-all font-bold text-[#1A4D2E]"
+                className="w-full px-5 py-4 rounded-[2rem] bg-white border-2 border-[#EBE4D5] focus:border-[#3E2B21] focus:outline-none transition-all font-bold text-[#3E2B21]"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => setEmailOrder(null)}
-                className="px-6 py-4 bg-[#FBFBF2] text-[#5F6F65] rounded-[2rem] font-bold hover:bg-gray-100 transition-colors border border-gray-200"
+                className="px-6 py-4 bg-[#FDFCF7] text-[#8C8775] rounded-[2rem] font-bold hover:bg-gray-100 transition-colors border border-gray-200"
               >
                 Cancel
               </button>
@@ -307,7 +307,7 @@ export default function POSOrdersPage() {
                   }
                 }}
                 disabled={!emailInput.trim()}
-                className="px-6 py-4 bg-[#1A4D2E] text-white rounded-[2rem] font-bold hover:bg-[#143d24] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
+                className="px-6 py-4 bg-[#3E2B21] text-white rounded-[2rem] font-bold hover:bg-[#2C1810] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
               >
                 Send
               </button>
