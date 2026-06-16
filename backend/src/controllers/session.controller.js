@@ -31,7 +31,8 @@ exports.openSession = async (req, res) => {
 
         // Check if terminal has an active session
         const activeSession = await prisma.session.findFirst({
-            where: { terminalId, status: 'OPEN' }
+            where: { terminalId, status: 'OPEN' },
+            include: { terminal: true }
         });
 
         if (activeSession) {
@@ -45,7 +46,8 @@ exports.openSession = async (req, res) => {
                 openingCash,
                 status: 'OPEN',
                 startAt: new Date()
-            }
+            },
+            include: { terminal: true }
         });
 
         res.status(201).json(session);
@@ -58,16 +60,33 @@ exports.closeSession = async (req, res) => {
     try {
         const { id } = req.params;
         const { closingCash } = closeSessionSchema.parse(req.body);
+        const userId = req.user?.id;
 
-        const session = await prisma.session.findUnique({ where: { id } });
-        if (!session) return res.status(404).json({ error: "Session not found" });
+        let session = await prisma.session.findUnique({ where: { id } });
+
+        if (!session && userId && process.env.NODE_ENV !== 'production') {
+            session = await prisma.session.findFirst({
+                where: { userId, status: 'OPEN' },
+                orderBy: { createdAt: 'desc' }
+            });
+        }
+
+        if (!session) {
+            return res.status(200).json({
+                message: 'Session already closed',
+                alreadyClosed: true
+            });
+        }
 
         if (session.status === 'CLOSED') {
-            return res.status(400).json({ error: "Session is already closed" });
+            return res.status(200).json({
+                ...session,
+                alreadyClosed: true
+            });
         }
 
         const updatedSession = await prisma.session.update({
-            where: { id },
+            where: { id: session.id },
             data: {
                 status: 'CLOSED',
                 closingCash,
@@ -77,6 +96,13 @@ exports.closeSession = async (req, res) => {
 
         res.json(updatedSession);
     } catch (error) {
+        if (error instanceof Error && /Unique constraint failed|Record to update not found/i.test(error.message)) {
+            return res.status(200).json({
+                message: 'Session already closed',
+                alreadyClosed: true
+            });
+        }
+
         res.status(400).json({ error: error.errors || error.message });
     }
 };

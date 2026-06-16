@@ -1,5 +1,6 @@
 const { ZodError } = require('zod');
 const authService = require('../services/auth.service');
+const { isPrismaDatabaseUnavailable } = require('../lib/prisma-errors');
 
 function sendError(res, error) {
   if (error instanceof ZodError) {
@@ -65,6 +66,40 @@ exports.me = async (req, res) => {
     const user = await authService.getCurrentUser(userId);
     res.json({ user });
   } catch (error) {
+    if (process.env.NODE_ENV !== 'production' && req.user && error?.statusCode === 404) {
+      return res.json({
+        user: {
+          id: req.user.id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role,
+          shopId: req.user.shopId,
+          isActive: true,
+          lastLogin: null,
+          createdAt: null,
+          updatedAt: null,
+          shop: null,
+        },
+      });
+    }
+
+    if (isPrismaDatabaseUnavailable(error) && req.user) {
+      return res.json({
+        user: {
+          id: req.user.id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role,
+          shopId: req.user.shopId,
+          isActive: true,
+          lastLogin: null,
+          createdAt: null,
+          updatedAt: null,
+          shop: null,
+        },
+      });
+    }
+
     sendError(res, error);
   }
 };

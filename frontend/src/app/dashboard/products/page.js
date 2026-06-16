@@ -10,10 +10,11 @@ import {
   Coffee,
   Tag,
   DollarSign,
-  Sparkles,
   Leaf,
   Grid,
   ShieldCheck,
+  Package,
+  ArrowUpRight,
 } from "lucide-react";
 import CoffeeLoader from "@/components/ui/CoffeeLoader";
 import { usePopup } from "@/context/PopupContext";
@@ -93,10 +94,10 @@ export default function ProductsPage() {
     setFilteredProducts(filtered);
   };
 
+  /* ═══════════════════════════════════════════════════════ */
+  /*  PRODUCT ADD/EDIT MODAL                                */
+  /* ═══════════════════════════════════════════════════════ */
   const ProductModal = ({ product, onClose, onSave }) => {
-    // When editing, clean up the product object:
-    // - Strip DB-only variant fields (id, productId, createdAt, updatedAt)
-    // - Resolve categoryId from nested category object if needed
     const initialData = product
       ? {
           ...product,
@@ -119,8 +120,6 @@ export default function ProductsPage() {
         };
 
     const [formData, setFormData] = useState(initialData);
-
-    // Category mode: 'select' = pick existing, 'new' = type new category name
     const [categoryMode, setCategoryMode] = useState('select');
     const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -145,83 +144,91 @@ export default function ProductsPage() {
 
     const handleSubmit = async (e) => {
       e.preventDefault();
-      // Pass newCategoryName alongside formData so handleSaveProduct can create it
       onSave({ ...formData, _newCategoryName: categoryMode === 'new' ? newCategoryName.trim() : null });
     };
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-        <div className="bg-beige-50 rounded-3xl max-w-2xl w-full max-h-[ 90vh] overflow-y-auto shadow-premium-lg" onClick={(e) => e.stopPropagation()}>
-          <div className="p-6 border-b border-gold-500/20">
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div
+          className="bg-white rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_25px_80px_rgba(62,43,33,0.18)]"
+          onClick={(e) => e.stopPropagation()}
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {/* Header */}
+          <div className="p-8 pb-6 border-b border-[#EBE4D5]/60 sticky top-0 bg-white rounded-t-[32px] z-10">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-coffee-800">
-                {product ? 'Edit Product' : 'Add New Product'}
-              </h2>
-              <button onClick={onClose} className="p-2 hover:bg-coffee-600/10 rounded-xl">
-                <X className="h-6 w-6 text-coffee-600" />
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-[#F3EDE5] flex items-center justify-center">
+                  <Package className="h-5 w-5 text-[#6B4423]" />
+                </div>
+                <h2 className="text-xl font-black text-[#3E2B21]">
+                  {product ? 'Edit Product' : 'Add New Product'}
+                </h2>
+              </div>
+              <button onClick={onClose} className="h-10 w-10 rounded-full bg-[#F5EFE6] hover:bg-[#EBE4D5] flex items-center justify-center transition-colors">
+                <X className="h-5 w-5 text-[#6B4423]" />
               </button>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="p-8 space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-coffee-700 mb-2">Product Name *</label>
+              <label className="block text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase mb-2">Product Name *</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                className="w-full px-4 py-3 rounded-2xl border-2 border-coffee-600/20 focus:border-coffee-600 focus:outline-none bg-white"
+                className="w-full px-4 py-3.5 rounded-[18px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none focus:ring-2 focus:ring-[#3E2B21]/10 bg-[#FDFCF7] text-sm font-medium text-[#3E2B21]"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-coffee-700 mb-2">Description</label>
+              <label className="block text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase mb-2">Description</label>
               <textarea
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-3 rounded-2xl border-2 border-coffee-600/20 focus:border-coffee-600 focus:outline-none bg-white"
+                className="w-full px-4 py-3.5 rounded-[18px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none focus:ring-2 focus:ring-[#3E2B21]/10 bg-[#FDFCF7] text-sm font-medium text-[#3E2B21] resize-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-coffee-700 mb-2">Price ($) *</label>
+                <label className="block text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase mb-2">Price (₹) *</label>
                 <input
                   type="number"
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   required
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-coffee-600/20 focus:border-coffee-600 focus:outline-none bg-white"
+                  className="w-full px-4 py-3.5 rounded-[18px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none focus:ring-2 focus:ring-[#3E2B21]/10 bg-[#FDFCF7] text-sm font-medium text-[#3E2B21]"
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-semibold text-coffee-700 mb-2">Tax (%)</label>
+                <label className="block text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase mb-2">Tax (%)</label>
                 <input
                   type="number"
                   step="0.01"
                   value={formData.tax || '0'}
                   onChange={(e) => setFormData({ ...formData, tax: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-coffee-600/20 focus:border-coffee-600 focus:outline-none bg-white"
+                  className="w-full px-4 py-3.5 rounded-[18px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none focus:ring-2 focus:ring-[#3E2B21]/10 bg-[#FDFCF7] text-sm font-medium text-[#3E2B21]"
                 />
               </div>
             </div>
 
-            {/* Category Field — select existing OR create new */}
+            {/* Category Field */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-coffee-700">Category *</label>
-                <div className="flex rounded-xl overflow-hidden border border-coffee-600/20 text-xs font-semibold">
+                <label className="block text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase">Category *</label>
+                <div className="flex rounded-full overflow-hidden border border-[#EBE4D5] text-[11px] font-bold">
                   <button
                     type="button"
                     onClick={() => setCategoryMode('select')}
-                    className={`px-3 py-1 transition ${
+                    className={`px-3 py-1.5 transition-all ${
                       categoryMode === 'select'
-                        ? 'bg-[#1A4D2E] text-white'
-                        : 'bg-white text-coffee-700 hover:bg-coffee-50'
+                        ? 'bg-[#3E2B21] text-white'
+                        : 'bg-[#FDFCF7] text-[#3E2B21]/60 hover:bg-[#F5EFE6]'
                     }`}
                   >
                     Select Existing
@@ -229,10 +236,10 @@ export default function ProductsPage() {
                   <button
                     type="button"
                     onClick={() => setCategoryMode('new')}
-                    className={`px-3 py-1 transition ${
+                    className={`px-3 py-1.5 transition-all ${
                       categoryMode === 'new'
-                        ? 'bg-[#1A4D2E] text-white'
-                        : 'bg-white text-coffee-700 hover:bg-coffee-50'
+                        ? 'bg-[#3E2B21] text-white'
+                        : 'bg-[#FDFCF7] text-[#3E2B21]/60 hover:bg-[#F5EFE6]'
                     }`}
                   >
                     + Create New
@@ -245,7 +252,7 @@ export default function ProductsPage() {
                   value={formData.categoryId}
                   onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                   required
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-coffee-600/20 focus:border-coffee-600 focus:outline-none bg-white"
+                  className="w-full px-4 py-3.5 rounded-[18px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none bg-[#FDFCF7] text-sm font-medium text-[#3E2B21]"
                 >
                   <option value="">Select a category...</option>
                   {categories.map(cat => (
@@ -253,119 +260,126 @@ export default function ProductsPage() {
                   ))}
                 </select>
               ) : (
-                <div className="relative">
+                <div>
                   <input
                     type="text"
                     placeholder="e.g. Cold Brews, Snacks, Combos..."
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-[#1A4D2E]/40 focus:border-[#1A4D2E] focus:outline-none bg-white"
+                    className="w-full px-4 py-3.5 rounded-[18px] border border-[#3E2B21]/20 focus:border-[#3E2B21]/40 focus:outline-none bg-[#FDFCF7] text-sm font-medium text-[#3E2B21]"
                   />
-                  <p className="text-xs text-[#5F6F65] mt-1.5">
+                  <p className="text-[11px] text-[#3E2B21]/40 mt-1.5 font-medium">
                     ✨ This will create a new category and assign it to the product.
                   </p>
                 </div>
               )}
             </div>
 
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formData.isAvailable}
                   onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
-                  className="w-5 h-5 rounded border-coffee-600/20"
+                  className="w-4.5 h-4.5 rounded border-[#EBE4D5] accent-[#3E2B21]"
                 />
-                <span className="text-sm font-semibold text-coffee-700">Available for Sale</span>
+                <span className="text-sm font-semibold text-[#3E2B21]/70">Available for Sale</span>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formData.sendToKitchen}
                   onChange={(e) => setFormData({ ...formData, sendToKitchen: e.target.checked })}
-                  className="w-5 h-5 rounded border-coffee-600/20"
+                  className="w-4.5 h-4.5 rounded border-[#EBE4D5] accent-[#3E2B21]"
                 />
-                <span className="text-sm font-semibold text-coffee-700">Send to Kitchen</span>
+                <span className="text-sm font-semibold text-[#3E2B21]/70">Send to Kitchen</span>
               </label>
             </div>
 
-            {/* Image URL Input */}
+            {/* Image URL */}
             <div>
-              <label className="block text-sm font-semibold text-coffee-700 mb-1">Image URL (Visual)</label>
-              <div className="flex gap-2">
+              <label className="block text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase mb-2">Image URL</label>
+              <div className="flex gap-3">
                 <input
                   type="url"
                   placeholder="https://images.unsplash.com/..."
                   value={formData.imageUrl || ''}
                   onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="flex-1 input-field"
+                  className="flex-1 px-4 py-3.5 rounded-[18px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none bg-[#FDFCF7] text-sm font-medium text-[#3E2B21]"
                 />
                 {formData.imageUrl && (
-                  <div className="h-10 w-10 rounded-lg overflow-hidden border border-gray-200">
+                  <div className="h-12 w-12 rounded-[14px] overflow-hidden border border-[#EBE4D5] shrink-0">
                     <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
-              <p className="text-xs text-gray-400 mt-1">Paste a link from Unsplash or similar. Leave empty for default.</p>
+              <p className="text-[11px] text-[#3E2B21]/30 mt-1.5 font-medium">Paste a link from Unsplash or similar.</p>
             </div>
 
-            {/* Variants Section */}
-            <div className="border-t border-coffee-100 pt-4">
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-semibold text-coffee-700">Variants / Add-ons</label>
+            {/* Variants */}
+            <div className="border-t border-[#EBE4D5]/60 pt-5">
+              <div className="flex items-center justify-between mb-4">
+                <label className="text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase">Variants / Add-ons</label>
                 <button
                   type="button"
                   onClick={handleAddVariant}
-                  className="text-xs flex items-center gap-1 text-coffee-600 hover:text-coffee-800 font-semibold"
+                  className="text-[12px] flex items-center gap-1.5 text-[#6B4423] hover:text-[#3E2B21] font-bold transition-colors"
                 >
-                  <Plus className="h-3 w-3" /> Add Variant
+                  <Plus className="h-3.5 w-3.5" /> Add Variant
                 </button>
               </div>
 
               <div className="space-y-3">
                 {(formData.variants || []).map((variant, index) => (
-                  <div key={index} className="flex gap-3 items-start">
+                  <div key={index} className="flex gap-3 items-center">
                     <input
                       type="text"
                       placeholder="Name (e.g. Large)"
                       value={variant.name}
                       onChange={(e) => handleVariantChange(index, "name", e.target.value)}
-                      className="flex-[2] px-3 py-2 rounded-xl border border-coffee-600/20 text-sm"
+                      className="flex-[2] px-3.5 py-2.5 rounded-[14px] border border-[#EBE4D5] text-sm font-medium bg-[#FDFCF7] text-[#3E2B21]"
                       required
                     />
                     <div className="flex-1 relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3E2B21]/30 text-xs font-bold">₹</span>
                       <input
                         type="number"
                         step="0.01"
-                        placeholder="Extra Price"
+                        placeholder="Extra"
                         value={variant.extraPrice}
                         onChange={(e) => handleVariantChange(index, "extraPrice", e.target.value)}
-                        className="w-full pl-6 pr-3 py-2 rounded-xl border border-coffee-600/20 text-sm"
+                        className="w-full pl-7 pr-3 py-2.5 rounded-[14px] border border-[#EBE4D5] text-sm font-medium bg-[#FDFCF7] text-[#3E2B21]"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveVariant(index)}
-                      className="p-2 text-red-400 hover:text-red-600"
+                      className="h-9 w-9 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center transition-colors shrink-0"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
                     </button>
                   </div>
                 ))}
                 {(formData.variants || []).length === 0 && (
-                  <p className="text-xs text-coffee-400 italic">No variants added (e.g. Sizes, Toppings)</p>
+                  <p className="text-[12px] text-[#3E2B21]/30 italic font-medium">No variants added (e.g. Sizes, Toppings)</p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-3 pt-4">
-              <button type="submit" className="flex-1 btn-primary">
+              <button
+                type="submit"
+                className="flex-1 py-3.5 rounded-[18px] bg-[#3E2B21] text-white font-bold text-sm hover:bg-[#2C1810] transition-colors shadow-[0_4px_12px_rgba(62,43,33,0.2)]"
+              >
                 {product ? 'Update Product' : 'Add Product'}
               </button>
-              <button type="button" onClick={onClose} className="flex-1 btn-outline">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3.5 rounded-[18px] border-2 border-[#3E2B21] text-[#3E2B21] font-bold text-sm hover:bg-[#3E2B21]/5 transition-colors"
+              >
                 Cancel
               </button>
             </div>
@@ -485,25 +499,6 @@ export default function ProductsPage() {
     }
   };
 
-  const getCategoryColor = (categoryName) => {
-    const name = categoryName?.toLowerCase() || '';
-    if (name.includes('food')) return 'bg-purple-900';
-    if (name.includes('beverage') || name.includes('coffee') || name.includes('drink')) return 'bg-coffee-800';
-    if (name.includes('dessert') || name.includes('cake') || name.includes('pastry')) return 'bg-green-800';
-    return 'bg-coffee-600';
-  };
-
-  const getCategoryStyle = (categoryName) => {
-    const name = categoryName?.toLowerCase() || '';
-    if (name.includes('bakery') || name.includes('dessert') || name.includes('cake')) {
-        return 'border-b-[#2E7D32]'; // Dark Green (Desserts)
-    }
-    if (name.includes('coffee') || name.includes('drink') || name.includes('beverage')) {
-        return 'border-b-[#3E2723]'; // Dark Brown (Beverages)
-    }
-    return 'border-b-[#4A148C]'; // Dark Purple (Food/Default)
-  };
-
   const getProductImageUrl = (product) => {
     if (product.imageUrl) return product.imageUrl;
     const query = encodeURIComponent(product?.name || "coffee");
@@ -556,7 +551,8 @@ export default function ProductsPage() {
       value: menuStats.total,
       hint: "Active across the cafe",
       icon: Grid,
-      accent: "bg-white/80 text-[#1A4D2E]",
+      iconBg: "bg-[#F3EDE5]",
+      iconColor: "text-[#6B4423]",
     },
     {
       id: "available",
@@ -564,7 +560,8 @@ export default function ProductsPage() {
       value: menuStats.available,
       hint: "Ready to serve",
       icon: ShieldCheck,
-      accent: "bg-[#E7F5EF] text-[#1A4D2E]",
+      iconBg: "bg-[#E8F5E9]",
+      iconColor: "text-[#2E7D32]",
     },
     {
       id: "kitchen",
@@ -572,7 +569,8 @@ export default function ProductsPage() {
       value: menuStats.kitchen,
       hint: "Auto-send enabled",
       icon: Leaf,
-      accent: "bg-[#FBF0DD] text-[#C07826]",
+      iconBg: "bg-[#FFF4E5]",
+      iconColor: "text-[#E68A00]",
     },
     {
       id: "average",
@@ -580,7 +578,8 @@ export default function ProductsPage() {
       value: `₹${menuStats.avgPrice.toFixed(2)}`,
       hint: "Ticket sweet spot",
       icon: DollarSign,
-      accent: "bg-[#FFF9ED] text-[#8C5A21]",
+      iconBg: "bg-[#FFF8E1]",
+      iconColor: "text-[#F9A825]",
     },
   ], [menuStats]);
 
@@ -594,143 +593,150 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-8">
-      {/* Hero */}
-      <section
-        className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-[#0F291C] via-[#184730] to-[#1C5B3C] text-white p-8 shadow-[0_45px_100px_rgba(10,46,29,0.45)] border border-white/10"
-      >
-        <div className="absolute inset-0 opacity-70 pointer-events-none">
-          <span className="absolute -left-6 top-8 h-32 w-32 rounded-full bg-white/10 blur-[120px]" />
-          <span className="absolute right-2 bottom-4 h-48 w-48 rounded-full bg-[#F4B860]/20 blur-[140px]" />
-        </div>
-
-        <div className="relative z-10 flex flex-col gap-8 xl:flex-row xl:items-center">
-          <div className="space-y-6 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-sm font-semibold">
-              <Sparkles className="h-4 w-4" /> Curate the Odoo Cafe menu
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/*  HERO SECTION                                         */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      <section className="flex flex-col xl:flex-row gap-6">
+        {/* Left — Hero Text */}
+        <div className="relative flex-1 bg-[#FDFCF7] rounded-[40px] p-8 lg:p-12 shadow-[0_4px_20px_rgba(62,43,33,0.02)] border border-[#EBE4D5]/60 overflow-hidden flex flex-col justify-center min-h-[220px]">
+          <div className="relative z-10 max-w-lg space-y-5">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#FCF8F2] text-[#3E2B21] text-sm font-semibold border border-[#EBE4D5]">
+              <Coffee className="h-4 w-4" /> Product Catalog
             </div>
-            <div className="space-y-4">
-              <h1 className="text-4xl lg:text-5xl font-black leading-tight">
-                Signature beverages & bites, crafted to perfection.
+
+            <div>
+              <h1 className="text-3xl lg:text-[44px] font-black leading-[1.15] text-[#3E2B21] font-serif tracking-tight">
+                Signature beverages & bites.
               </h1>
-              <p className="text-white/80 text-lg">
-                Keep every latte, frappe, and pastry aligned with your cafe&apos;s story. Update availability, pricing, and categories in one elegant interface.
+              <p className="text-[#3E2B21]/60 text-base mt-3 font-medium leading-relaxed max-w-md">
+                Curate your menu, manage pricing, and keep every latte and pastry aligned with your cafe&apos;s story.
               </p>
             </div>
 
-            <div className="inline-flex gap-3 flex-wrap">
-              {[
-                { label: "Espresso Bar", value: `${menuStats.available} live items` },
-                { label: "Categories", value: `${menuStats.categories} curated` },
-              ].map((chip) => (
-                <span
-                  key={chip.label}
-                  className="px-4 py-2 rounded-full bg-white/10 border border-white/10 text-sm tracking-wide"
-                >
-                  <span className="text-white/70 mr-2">{chip.label}</span>
-                  <span className="font-semibold text-white">{chip.value}</span>
-                </span>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => {
-                  setEditingProduct(null);
-                  setShowAddModal(true);
-                }}
-                className="px-6 py-3 rounded-2xl bg-white text-[#1A4D2E] font-semibold shadow-[0_15px_45px_rgba(0,0,0,0.2)] flex items-center gap-2"
-              >
-                <Plus className="h-5 w-5" /> Add new product
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setEditingProduct(null);
+                setShowAddModal(true);
+              }}
+              className="inline-flex items-center gap-2.5 px-6 py-3 rounded-[18px] bg-[#3E2B21] text-white font-bold text-sm shadow-[0_4px_12px_rgba(62,43,33,0.2)] hover:bg-[#2C1810] transition-colors"
+            >
+              <Plus className="h-4.5 w-4.5" /> Add new product
+            </button>
           </div>
 
-          <div className="w-full max-w-sm rounded-[32px] bg-white/10 border border-white/20 p-6 backdrop-blur">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="rounded-2xl bg-white/10 border border-white/10 p-4">
-                <p className="text-white/70">Kitchen Queue</p>
-                <p className="text-3xl font-black">{menuStats.kitchen}</p>
-                <p className="text-xs text-white/60 mt-1">Auto sent to prep</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 border border-white/10 p-4">
-                <p className="text-white/70">Avg. Price</p>
-                <p className="text-3xl font-black">₹{menuStats.avgPrice.toFixed(2)}</p>
-                <p className="text-xs text-white/60 mt-1">Ticket blend</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 border border-white/10 p-4 col-span-2 flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
-                  <Coffee className="h-6 w-6" />
+          <img
+            src="/hero-coffee.png"
+            alt="Coffee"
+            className="absolute -right-16 -bottom-10 h-[130%] object-contain opacity-30 pointer-events-none"
+          />
+        </div>
+
+        {/* Right — Stats Summary */}
+        <div className="w-full xl:w-[380px] flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-4 flex-1">
+            <div className="rounded-[28px] bg-white border border-[#EBE4D5] p-5 shadow-[0_4px_20px_rgba(62,43,33,0.02)] flex flex-col justify-center">
+              <p className="text-[#3E2B21]/50 text-[12px] font-bold tracking-wide">Menu Items</p>
+              <div className="flex items-end justify-between mt-2">
+                <p className="text-[28px] font-black text-[#3E2B21] leading-none">{menuStats.total}</p>
+                <div className="h-9 w-9 rounded-full bg-[#F3EDE5] flex items-center justify-center text-[#6B4423]">
+                  <Grid className="h-4 w-4" />
                 </div>
-                <div>
-                  <p className="text-white/70 text-xs uppercase tracking-[0.3em]">Menu health</p>
-                  <p className="text-lg font-semibold">{menuStats.available} items serving now</p>
+              </div>
+            </div>
+            <div className="rounded-[28px] bg-white border border-[#EBE4D5] p-5 shadow-[0_4px_20px_rgba(62,43,33,0.02)] flex flex-col justify-center">
+              <p className="text-[#3E2B21]/50 text-[12px] font-bold tracking-wide">Available</p>
+              <div className="flex items-end justify-between mt-2">
+                <p className="text-[28px] font-black text-[#3E2B21] leading-none">{menuStats.available}</p>
+                <div className="h-9 w-9 rounded-full bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32]">
+                  <ShieldCheck className="h-4 w-4" />
                 </div>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-[28px] bg-white border border-[#EBE4D5] p-5 shadow-[0_4px_20px_rgba(62,43,33,0.02)]">
+            <p className="text-[#3E2B21]/50 text-[12px] font-bold tracking-wide">Kitchen Queue</p>
+            <div className="flex items-end justify-between mt-2">
+              <p className="text-[28px] font-black text-[#3E2B21] leading-none">{menuStats.kitchen}</p>
+              <div className="flex items-center gap-1 text-[#E68A00]">
+                <ArrowUpRight className="h-4 w-4" />
+                <span className="text-xs font-bold">Auto-sent</span>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-[28px] bg-white border border-[#EBE4D5] p-5 shadow-[0_4px_20px_rgba(62,43,33,0.02)]">
+            <p className="text-[#3E2B21]/50 text-[12px] font-bold tracking-wide">Avg. Price</p>
+            <div className="flex items-end justify-between mt-2">
+              <p className="text-[28px] font-black text-[#3E2B21] leading-none">₹{menuStats.avgPrice.toFixed(2)}</p>
+              <div className="h-9 w-9 rounded-full bg-[#FFF8E1] flex items-center justify-center text-[#F9A825]">
+                <DollarSign className="h-4 w-4" />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Quick stats */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/*  QUICK STATS                                          */}
+      {/* ═══════════════════════════════════════════════════════ */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {quickStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
               key={stat.id}
-              className="rounded-[30px] bg-white/90 backdrop-blur border border-white shadow-[0_25px_60px_rgba(26,77,46,0.08)] p-5 transition duration-300 hover:-translate-y-1"
+              className="rounded-[28px] bg-white p-5 shadow-[0_4px_20px_rgba(62,43,33,0.02)] border border-[#EBE4D5]/60 hover:shadow-[0_8px_30px_rgba(62,43,33,0.06)] transition-all duration-300"
             >
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.35em] text-[#5F6F65]/70">
-                    {stat.label}
-                  </p>
-                  <p className="text-3xl font-black text-[#1A4D2E] mt-2">{stat.value}</p>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <p className="text-[12px] font-bold text-[#3E2B21]/50 tracking-wide">{stat.label}</p>
+                  <p className="text-2xl font-black text-[#3E2B21] mt-1">{stat.value}</p>
+                  <p className="text-[11px] text-[#3E2B21]/40 font-medium mt-1.5">{stat.hint}</p>
                 </div>
-                <span className={`h-12 w-12 rounded-2xl flex items-center justify-center ${stat.accent}`}>
-                  <Icon className="h-5 w-5" />
-                </span>
+                <div className={`h-11 w-11 rounded-full flex items-center justify-center shrink-0 ${stat.iconBg}`}>
+                  <Icon className={`h-5 w-5 ${stat.iconColor}`} />
+                </div>
               </div>
-              <p className="text-sm text-[#5F6F65] mt-3">{stat.hint}</p>
             </div>
           );
         })}
       </section>
 
-      {/* Filters */}
-      <section className="rounded-[36px] bg-white/95 backdrop-blur border border-white shadow-[0_30px_70px_rgba(26,77,46,0.08)] p-6 space-y-6">
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/*  FILTERS & SEARCH                                     */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      <section className="rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] p-6 space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-coffee-600/40 h-5 w-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#3E2B21]/30 h-5 w-5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search cappuccino, salted caramel..."
-              className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-coffee-600/20 focus:border-coffee-600 focus:outline-none transition-colors bg-white"
+              className="w-full pl-12 pr-4 py-3.5 rounded-[20px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none focus:ring-2 focus:ring-[#3E2B21]/10 transition-all bg-[#FDFCF7] text-sm font-medium text-[#3E2B21] placeholder:text-[#3E2B21]/30"
             />
           </div>
-          <div className="text-sm text-[#5F6F65]">
-            Showing <span className="font-semibold text-[#1A4D2E]">{filteredProducts.length}</span> of
-            <span className="font-semibold text-[#1A4D2E]"> {products.length}</span> products
+          <div className="text-sm text-[#3E2B21]/50 font-medium">
+            Showing <span className="font-bold text-[#3E2B21]">{filteredProducts.length}</span> of
+            <span className="font-bold text-[#3E2B21]"> {products.length}</span> products
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           {categoryPills.map((pill) => {
             const isActive = categoryFilter === pill.id;
             return (
               <button
                 key={pill.id}
                 onClick={() => setCategoryFilter(pill.id)}
-                className={`px-4 py-2 rounded-full border text-sm font-semibold flex items-center gap-2 transition ${isActive
-                  ? "bg-[#1A4D2E] text-white border-transparent shadow"
-                  : "bg-white text-[#1A4D2E] border-coffee-100 hover:border-coffee-200"
+                className={`px-4 py-2 rounded-full text-[13px] font-bold flex items-center gap-2 transition-all duration-200 ${isActive
+                  ? "bg-[#3E2B21] text-white shadow-[0_4px_12px_rgba(62,43,33,0.2)]"
+                  : "bg-[#FDFCF7] text-[#3E2B21]/70 border border-[#EBE4D5] hover:border-[#3E2B21]/20 hover:text-[#3E2B21]"
                   }`}
               >
                 {pill.name}
                 <span
-                  className={`h-6 min-w-6 rounded-full text-xs flex items-center justify-center ${isActive ? "bg-white/20" : "bg-coffee-50"
+                  className={`h-5 min-w-5 rounded-full text-[10px] flex items-center justify-center px-1.5 font-bold ${isActive ? "bg-white/20 text-white" : "bg-[#F3EDE5] text-[#3E2B21]/50"
                     }`}
                 >
                   {pill.count}
@@ -741,18 +747,16 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* Products Grid */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/*  PRODUCTS GRID                                        */}
+      {/* ═══════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredProducts.map((product) => {
-          const categoryColorBg = getCategoryColor(product.category?.name);
-          const categoryFooterClass = getCategoryStyle(product.category?.name);
-
           return (
             <div
               key={product.id}
-              className={`group relative rounded-[32px] bg-white border border-[#EFE8D8] shadow-sm hover:shadow-2xl transition-all overflow-hidden border-b-[8px] ${categoryFooterClass}`}
+              className="group relative rounded-[28px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] hover:shadow-[0_12px_40px_rgba(62,43,33,0.08)] transition-all duration-300 overflow-hidden"
             >
-              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-[#F9E4C9] via-[#FDF5EA] to-[#E6F4EB] opacity-90" />
               {/* Product image */}
               <div className="relative h-44 overflow-hidden">
                 <img
@@ -761,56 +765,58 @@ export default function ProductsPage() {
                   className="w-full h-full object-cover transition duration-700 group-hover:scale-105"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f291c]/65 to-transparent" />
-              </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
 
-              <div className="relative p-6 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.35em] text-[#5F6F65]/70 flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${categoryColorBg}`} />
-                      {product.category?.name || "Uncategorized"}
-                    </p>
-                    <h3 className="text-2xl font-bold text-[#1A4D2E] mt-2 leading-tight">
-                      {product.name}
-                    </h3>
-                  </div>
+                {/* Status badge */}
+                <div className="absolute top-4 right-4">
                   {!product.isAvailable ? (
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
+                    <span className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-red-50/90 text-red-600 border border-red-100 backdrop-blur-sm">
                       Paused
                     </span>
                   ) : (
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <span className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/90 text-[#2E7D32] border border-[#A5D6A7]/50 backdrop-blur-sm">
                       Live
                     </span>
                   )}
                 </div>
+              </div>
+
+              <div className="p-5 space-y-3">
+                {/* Category */}
+                <p className="text-[11px] font-bold text-[#3E2B21]/40 tracking-wider uppercase">
+                  {product.category?.name || "Uncategorized"}
+                </p>
+
+                {/* Name */}
+                <h3 className="text-lg font-black text-[#3E2B21] leading-tight">
+                  {product.name}
+                </h3>
 
                 {product.description && (
-                  <p className="text-sm text-[#5F6F65] line-clamp-2">
+                  <p className="text-[13px] text-[#3E2B21]/50 line-clamp-2 font-medium leading-relaxed">
                     {product.description}
                   </p>
                 )}
 
-                <div className="flex items-center gap-3 text-sm text-[#5F6F65]">
-                  <Tag className="h-4 w-4" />
-                  <span>{product.category?.name || "Category"}</span>
+                {/* Tags */}
+                <div className="flex items-center gap-2 flex-wrap">
                   {product.sendToKitchen && (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-[#E7F5EF] text-[#1A4D2E]">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#FFF4E5] text-[#B8700A] border border-[#FFE0A3]">
                       <ShieldCheck className="h-3 w-3" /> Kitchen
                     </span>
                   )}
                   {product.variants?.length > 0 && (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#F3EDE5] text-[#6B4423] border border-[#EBE4D5]">
                       <Grid className="h-3 w-3" /> {product.variants.length} Options
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-end justify-between">
+                {/* Price + Actions */}
+                <div className="flex items-end justify-between pt-2 border-t border-[#EBE4D5]/60">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.4em] text-[#A08A6B]">Price</p>
-                    <p className="text-3xl font-black text-[#1A4D2E]">
+                    <p className="text-[10px] uppercase tracking-widest text-[#3E2B21]/30 font-bold">Price</p>
+                    <p className="text-2xl font-black text-[#3E2B21]">
                       ₹{Number(product.price).toFixed(2)}
                     </p>
                   </div>
@@ -820,15 +826,15 @@ export default function ProductsPage() {
                         setEditingProduct(product);
                         setShowAddModal(true);
                       }}
-                      className="p-2 rounded-2xl border border-[#E1D9C8] hover:bg-[#F9F5EC] transition"
+                      className="h-9 w-9 rounded-full border border-[#EBE4D5] hover:border-[#3E2B21]/20 hover:bg-[#F5EFE6] flex items-center justify-center transition-all"
                     >
-                      <Edit2 className="h-4 w-4 text-[#5F6F65]" />
+                      <Edit2 className="h-3.5 w-3.5 text-[#6B4423]" />
                     </button>
                     <button
                       onClick={() => handleDeleteProduct(product.id)}
-                      className="p-2 rounded-2xl border border-[#F3D7D2] hover:bg-red-50 transition"
+                      className="h-9 w-9 rounded-full border border-red-100 hover:bg-red-50 flex items-center justify-center transition-all"
                     >
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
                     </button>
                   </div>
                 </div>
@@ -839,10 +845,12 @@ export default function ProductsPage() {
       </div>
 
       {filteredProducts.length === 0 && (
-        <div className="text-center py-16 rounded-[32px] bg-gradient-to-br from-[#FFF9F0] to-[#F1F6EF] border border-[#F0E7D5]">
-          <Coffee className="h-16 w-16 text-[#C0A074]/40 mx-auto mb-4" />
-          <p className="text-[#5F6F65] text-lg">No products match this view</p>
-          <p className="text-[#9DA5A0] text-sm">Try another category or keyword.</p>
+        <div className="text-center py-24 rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)]">
+          <div className="h-16 w-16 rounded-full bg-[#F5EFE6] flex items-center justify-center mx-auto mb-4">
+            <Coffee className="h-8 w-8 text-[#3E2B21]/30" />
+          </div>
+          <p className="text-[#3E2B21]/60 text-lg font-bold">No products match this view</p>
+          <p className="text-sm text-[#3E2B21]/40 font-medium mt-1">Try another category or keyword.</p>
         </div>
       )}
 

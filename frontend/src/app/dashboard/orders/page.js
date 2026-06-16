@@ -32,11 +32,28 @@ import CoffeeLoader from "@/components/ui/CoffeeLoader";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    preparingOrders: 0,
+    completedOrders: 0,
+    periodRevenue: 0,
+    SENT: 0,
+    PREPARING: 0,
+    COMPLETED: 0,
+    PAID: 0,
+    CANCELLED: 0,
+    DRAFT: 0
+  });
+
   const statusOptions = [
     "all",
     "SENT",
@@ -47,29 +64,79 @@ export default function OrdersPage() {
     "DRAFT",
   ];
 
+  // Debounce search query
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setCurrentPage(1); // Reset to page 1 on new search
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
-  useEffect(() => {
-    filterOrders();
-  }, [searchQuery, statusFilter, orders]);
+  // Fetch stats once on mount, or when status/search updates to keep metrics in sync
+  const fetchStats = async () => {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/dashboard/stats?range=day`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setStats({
+          totalOrders: data.periodOrders || 0,
+          pendingOrders: data.pendingOrders || 0,
+          preparingOrders: data.preparingOrders || 0,
+          completedOrders: data.completedOrders || 0,
+          periodRevenue: data.periodRevenue || 0,
+          SENT: data.pendingOrders || 0,
+          PREPARING: data.preparingOrders || 0,
+          COMPLETED: data.completedOrders || 0,
+          PAID: data.completedOrders || 0,
+          CANCELLED: 0, // Fallbacks as stats endpoints group paid/completed
+          DRAFT: 0
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
 
   const fetchOrders = async () => {
+    setLoading(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`${API_URL}/orders`, {
+      const queryParams = new URLSearchParams({
+        page: currentPage,
+        limit: 20,
+        status: statusFilter
+      });
+
+      if (debouncedSearchQuery) {
+        queryParams.append('search', debouncedSearchQuery);
+      }
+
+      const response = await fetch(`${API_URL}/orders?${queryParams.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setOrders(data);
-        setFilteredOrders(data);
+        const result = await response.json();
+        if (result.data && result.pagination) {
+          setOrders(result.data);
+          setTotalPages(result.pagination.totalPages || 1);
+          setTotalOrdersCount(result.pagination.total || 0);
+        } else {
+          setOrders(result);
+          setTotalPages(1);
+          setTotalOrdersCount(result.length || 0);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
@@ -78,23 +145,17 @@ export default function OrdersPage() {
     }
   };
 
-  const filterOrders = () => {
-    let filtered = [...orders];
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
-    //Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(order =>
-        order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.table?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+  useEffect(() => {
+    fetchOrders();
+  }, [currentPage, statusFilter, debouncedSearchQuery]);
 
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(order => order.status === statusFilter);
-    }
-
-    setFilteredOrders(filtered);
+  const handleStatusFilterChange = (status) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
   };
 
   const getStatusConfig = (status) => {
@@ -173,17 +234,20 @@ export default function OrdersPage() {
   );
 
   const statusSummary = useMemo(() => {
-    const summary = { total: orders.length, revenue: 0 };
-    orders.forEach((order) => {
-      const statusKey = order.status || "UNKNOWN";
-      summary[statusKey] = (summary[statusKey] || 0) + 1;
-      summary.revenue += Number(order.totalAmount) || 0;
-    });
-    return summary;
-  }, [orders]);
+    return {
+      total: stats.totalOrders,
+      SENT: stats.SENT,
+      PREPARING: stats.PREPARING,
+      COMPLETED: stats.COMPLETED,
+      PAID: stats.PAID,
+      CANCELLED: stats.CANCELLED,
+      DRAFT: stats.DRAFT,
+      revenue: stats.periodRevenue
+    };
+  }, [stats]);
 
-  const progressOrders = (statusSummary.PREPARING || 0) + (statusSummary.SENT || 0);
-  const completedOrders = (statusSummary.COMPLETED || 0) + (statusSummary.PAID || 0);
+  const progressOrders = stats.pendingOrders + stats.preparingOrders;
+  const completedOrders = stats.completedOrders;
 
   const quickStats = [
     {
@@ -222,8 +286,8 @@ export default function OrdersPage() {
     {
       id: "revenue",
       label: "Revenue Today",
-      value: formatCurrency(statusSummary.revenue || 0),
-      hint: "Gross sales generated",
+      value: formatCurrency(stats.periodRevenue),
+      hint: "Gross sales generated today",
       icon: DollarSign,
       iconBg: "bg-[#FFF8E1]",
       iconColor: "text-[#F9A825]",
@@ -828,3 +892,4 @@ export default function OrdersPage() {
     </div>
   );
 }
+

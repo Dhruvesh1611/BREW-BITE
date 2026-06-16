@@ -51,31 +51,101 @@ export default function DashboardPage() {
   /* ✅ Socket Listener for Real-Time Updates */
   useEffect(() => {
     const socket = getSocket();
-    socket.emit('join', 'admin');
+    socket.emit('join', 'admin-room');
 
-    const handleSocketUpdate = (data) => {
-      console.log("📶 Real-time dashboard update received:", data);
+    const handleOrderCreated = (order) => {
+      console.log("📶 Order created via socket:", order);
+      setRecentOrders((prev) => [order, ...prev].slice(0, 5));
+      setStats((prev) => {
+        if (!prev) return prev;
+        const isSent = order.status === 'SENT';
+        return {
+          ...prev,
+          pendingOrders: isSent ? prev.pendingOrders + 1 : prev.pendingOrders,
+          periodOrders: prev.periodOrders + 1,
+          totalOrders: prev.totalOrders + 1
+        };
+      });
+    };
+
+    const handlePaymentCompleted = (data) => {
+      console.log("📶 Payment completed via socket:", data);
+      const { order } = data;
+      setRecentOrders((prev) => prev.map(o => o.id === order.id ? { ...o, status: order.status } : o));
+      setStats((prev) => {
+        if (!prev) return prev;
+        const amount = Number(order.totalAmount) || 0;
+        return {
+          ...prev,
+          totalRevenue: prev.totalRevenue + amount,
+          periodRevenue: prev.periodRevenue + amount,
+          completedOrders: prev.completedOrders + 1,
+          pendingOrders: Math.max(0, prev.pendingOrders - 1)
+        };
+      });
+    };
+
+    const handleKitchenPreparing = (order) => {
+      console.log("📶 Order preparing in kitchen:", order);
+      setStats((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          pendingOrders: Math.max(0, prev.pendingOrders - 1),
+          preparingOrders: prev.preparingOrders + 1
+        };
+      });
+    };
+
+    const handleKitchenCompleted = (order) => {
+      console.log("📶 Order completed in kitchen:", order);
+      setStats((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          preparingOrders: Math.max(0, prev.preparingOrders - 1),
+          completedOrders: prev.completedOrders + 1
+        };
+      });
+    };
+
+    const handleTableStatusChanged = (data) => {
+      console.log("📶 Table status changed via socket:", data);
+      setStats((prev) => {
+        if (!prev) return prev;
+        const isOccupied = data.status === 'OCCUPIED';
+        const isAvailable = data.status === 'AVAILABLE';
+        return {
+          ...prev,
+          occupiedTables: isOccupied ? prev.occupiedTables + 1 : (isAvailable ? Math.max(0, prev.occupiedTables - 1) : prev.occupiedTables),
+          availableTables: isAvailable ? prev.availableTables + 1 : (isOccupied ? Math.max(0, prev.availableTables - 1) : prev.availableTables)
+        };
+      });
+    };
+
+    const handleGenericUpdate = () => {
+      console.log("📶 Generic dashboard update trigger");
       setRefreshKey((prev) => prev + 1);
     };
 
-    socket.on('order_created', handleSocketUpdate);
-    socket.on('payment_completed', handleSocketUpdate);
-    socket.on('order_sent_to_kitchen', handleSocketUpdate);
-    socket.on('kitchen_preparing', handleSocketUpdate);
-    socket.on('kitchen_completed', handleSocketUpdate);
-    socket.on('table_released', handleSocketUpdate);
-    socket.on('table_status_changed', handleSocketUpdate);
-    socket.on('dashboard_updated', handleSocketUpdate);
+    socket.on('order_created', handleOrderCreated);
+    socket.on('payment_completed', handlePaymentCompleted);
+    socket.on('order_sent_to_kitchen', handleGenericUpdate);
+    socket.on('kitchen_preparing', handleKitchenPreparing);
+    socket.on('kitchen_completed', handleKitchenCompleted);
+    socket.on('table_released', handleGenericUpdate);
+    socket.on('table_status_changed', handleTableStatusChanged);
+    socket.on('dashboard_updated', handleGenericUpdate);
 
     return () => {
-      socket.off('order_created', handleSocketUpdate);
-      socket.off('payment_completed', handleSocketUpdate);
-      socket.off('order_sent_to_kitchen', handleSocketUpdate);
-      socket.off('kitchen_preparing', handleSocketUpdate);
-      socket.off('kitchen_completed', handleSocketUpdate);
-      socket.off('table_released', handleSocketUpdate);
-      socket.off('table_status_changed', handleSocketUpdate);
-      socket.off('dashboard_updated', handleSocketUpdate);
+      socket.off('order_created', handleOrderCreated);
+      socket.off('payment_completed', handlePaymentCompleted);
+      socket.off('order_sent_to_kitchen', handleGenericUpdate);
+      socket.off('kitchen_preparing', handleKitchenPreparing);
+      socket.off('kitchen_completed', handleKitchenCompleted);
+      socket.off('table_released', handleGenericUpdate);
+      socket.off('table_status_changed', handleTableStatusChanged);
+      socket.off('dashboard_updated', handleGenericUpdate);
     };
   }, []);
 
@@ -91,7 +161,7 @@ export default function DashboardPage() {
         const headers = { Authorization: `Bearer ${token}` };
 
         const [statsRes, ordersRes] = await Promise.all([
-          fetch(`${API_URL}/dashboard/stats`, { headers }),
+          fetch(`${API_URL}/dashboard/stats?range=${activeRange}`, { headers }),
           fetch(`${API_URL}/dashboard/recent-orders`, { headers }),
         ]);
 
@@ -112,7 +182,7 @@ export default function DashboardPage() {
     };
 
     if (token) fetchData();
-  }, [token, refreshKey]);
+  }, [token, refreshKey, activeRange]);
 
   /* ✅ Fetch Chart Data Based on Active Range */
   useEffect(() => {
@@ -159,7 +229,7 @@ export default function DashboardPage() {
     };
 
     if (token) fetchChartData();
-  }, [activeRange, token, refreshKey]);
+  }, [activeRange, token]);
 
   /* ✅ Timeframes */
   const timeframeOptions = [
@@ -293,11 +363,23 @@ export default function DashboardPage() {
       {/* ✅ STATS */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard title="Total Revenue" value={`₹${stats?.totalRevenue || 0}`} icon={DollarSign} />
-        <StatsCard title="Today's Revenue" value={`₹${stats?.todayRevenue || 0}`} icon={TrendingUp} />
-        <StatsCard title="Orders Today" value={stats?.ordersToday || 0} icon={ShoppingBag} />
+        <StatsCard 
+          title={`${activeRange.charAt(0).toUpperCase() + activeRange.slice(1)}'s Revenue`} 
+          value={`₹${stats?.periodRevenue || 0}`} 
+          icon={TrendingUp} 
+        />
+        <StatsCard 
+          title={`Orders (${activeRange})`} 
+          value={stats?.periodOrders || 0} 
+          icon={ShoppingBag} 
+        />
         <StatsCard title="Pending Orders" value={stats?.pendingOrders || 0} icon={Clock} />
         <StatsCard title="Preparing Orders" value={stats?.preparingOrders || 0} icon={ChefHat} />
-        <StatsCard title="Completed Orders" value={stats?.completedOrders || 0} icon={CheckCircle} />
+        <StatsCard 
+          title={`Completed (${activeRange})`} 
+          value={stats?.completedOrders || 0} 
+          icon={CheckCircle} 
+        />
         <StatsCard title="Occupied Tables" value={stats?.occupiedTables || 0} icon={Users} />
         <StatsCard title="Available Tables" value={stats?.availableTables || 0} icon={Coffee} />
       </section>
@@ -326,20 +408,20 @@ export default function DashboardPage() {
                 series={
                   categories.length > 0
                     ? categories.map((cat, idx) => {
-                      const key = cat.toLowerCase().replace(/\s+/g, '');
-                      const colors = ['#1A4D2E', '#F4A460', '#4ADE80', '#8B5CF6', '#F59E0B'];
-                      return {
-                        data: chartData.map((d) => d[key] || 0),
-                        label: cat,
-                        color: colors[idx % colors.length],
-                        curve: "linear",
-                      };
-                    })
+                        const key = cat.toLowerCase().replace(/\s+/g, '');
+                        const colors = ['#1A4D2E', '#F4A460', '#4ADE80', '#8B5CF6', '#F59E0B'];
+                        return {
+                          data: chartData.map((d) => d[key] || 0),
+                          label: cat,
+                          color: colors[idx % colors.length],
+                          curve: "linear",
+                        };
+                      })
                     : [
-                      { data: chartData.map((d) => d.beverages || 0), label: "Beverages", color: "#1A4D2E" },
-                      { data: chartData.map((d) => d.food || 0), label: "Food", color: "#F4A460" },
-                      { data: chartData.map((d) => d.desserts || 0), label: "Desserts", color: "#4ADE80" },
-                    ]
+                        { data: chartData.map((d) => d.beverages || 0), label: "Beverages", color: "#1A4D2E" },
+                        { data: chartData.map((d) => d.food || 0), label: "Food", color: "#F4A460" },
+                        { data: chartData.map((d) => d.desserts || 0), label: "Desserts", color: "#4ADE80" },
+                      ]
                 }
                 margin={{ left: 60, right: 20, top: 40, bottom: 40 }}
               />
@@ -363,9 +445,9 @@ export default function DashboardPage() {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 {chartsLoading ? (
-                  Array(5).fill(0).map((_, i) => (
+                   Array(5).fill(0).map((_, i) => (
                     <div key={i} className="h-16 w-full bg-gray-50 animate-pulse rounded-2xl" />
-                  ))
+                   ))
                 ) : radarData.length > 0 ? (
                   radarData.map((product, idx) => (
                     <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-[#FDFCF7] border border-[#F1EEDB] hover:border-[#1A4D2E]/20 transition-colors group">
@@ -380,8 +462,8 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right">
                         <div className="h-2 w-24 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#1A4D2E]"
+                          <div 
+                            className="h-full bg-[#1A4D2E]" 
                             style={{ width: `${(product.orders / radarData[0].orders) * 100}%` }}
                           />
                         </div>
@@ -424,12 +506,12 @@ export default function DashboardPage() {
         {/* ✅ Right Panel */}
         <div className="flex flex-col gap-6">
           {/* ✅ Heatmap */}
-          <div className="rounded-3xl bg-white p-6 shadow-lg">
+          <div className="rounded-3xl bg-white p-6 shadow-lg border border-[#F1EEDB]">
             <h3 className="font-bold text-[#1A4D2E] mb-4">
-              Weekly Orders Heatmap
+              Hourly Activity Heatmap
             </h3>
 
-            <div style={{ height: 260 }}>
+            <div style={{ height: 280 }}>
               {chartsLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <CoffeeLoader size="sm" text="" />
@@ -437,15 +519,26 @@ export default function DashboardPage() {
               ) : heatmapData.length > 0 ? (
                 <ResponsiveHeatMap
                   data={heatmapData}
-                  margin={{ top: 30, right: 20, bottom: 40, left: 80 }}
+                  margin={{ top: 20, right: 10, bottom: 60, left: 50 }}
                   axisTop={null}
                   axisRight={null}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: -45,
+                    legend: 'Hour of Day',
+                    legendPosition: 'middle',
+                    legendOffset: 45
+                  }}
                   colors={{ type: "sequential", scheme: "greens" }}
                   enableLabels={false}
+                  opacity={0.9}
+                  emptyColor="#FDFCF7"
                 />
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  <p>No data available</p>
+                <div className="flex flex-col items-center justify-center h-full text-gray-400 bg-[#FDFCF7] rounded-2xl border-2 border-dashed border-[#F1EEDB]">
+                  <Clock className="h-8 w-8 mb-2 opacity-20" />
+                  <p className="text-sm">No activity data yet</p>
                 </div>
               )}
             </div>
