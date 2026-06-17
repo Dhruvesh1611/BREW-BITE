@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
         <div className="relative z-10 max-w-xl text-[#FEFCE8] space-y-10">
           <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}>
             <div className="h-24 w-24 rounded-3xl bg-[#FEFCE8]/10 backdrop-blur-md flex items-center justify-center shadow-2xl border border-[#FEFCE8]/20">
-              <Image src="/brew_and_bite_logo.png" alt="logo" width={82} height={82} className="object-contain brightness-0 invert" />
+              <Image src="/brew_and_bite_logo.png" alt="logo" width={82} height={82} className="object-contain" />
             </div>
           </motion.div>
           <h2 className="text-6xl font-extrabold leading-[1.1] tracking-tight text-[#FEFCE8]">

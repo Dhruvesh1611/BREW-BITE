@@ -188,7 +188,7 @@ export default function SignupPage() {
                 alt="logo"
                 width={64}
                 height={64}
-                className="object-contain brightness-0 invert"
+                className="object-contain"
               />
             </div>
           </motion.div>

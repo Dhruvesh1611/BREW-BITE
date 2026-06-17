@@ -56,7 +56,7 @@ export default function Home() {
           >
             <div className="flex items-center justify-center mb-10">
               <div className="h-28 w-28 rounded-[32px] bg-[#3E2B21] flex items-center justify-center shadow-[0_25px_60px_rgba(62,43,33,0.4)] rotate-3 hover:rotate-0 transition-transform duration-500">
-                <Image src="/brew_and_bite_logo.png" alt="logo" width={100} height={100} className="object-contain brightness-0 invert" />
+                <Image src="/brew_and_bite_logo.png" alt="logo" width={100} height={100} className="object-contain" />
               </div>
             </div>
 

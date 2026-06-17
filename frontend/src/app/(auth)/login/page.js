@@ -79,7 +79,7 @@ export default function LoginPage() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <div className="h-16 w-16 rounded-[20px] bg-white/[0.08] backdrop-blur-xl flex items-center justify-center border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-              <Image src="/brew_and_bite_logo.png" alt="logo" width={48} height={48} className="object-contain brightness-0 invert opacity-90" />
+              <Image src="/brew_and_bite_logo.png" alt="logo" width={48} height={48} className="object-contain opacity-90" />
             </div>
           </motion.div>
 
