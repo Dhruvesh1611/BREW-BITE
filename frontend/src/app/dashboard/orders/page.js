@@ -3,7 +3,7 @@
 import { jsPDF } from "jspdf";
 import emailjs from '@emailjs/browser';
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Search,
   Filter,
@@ -33,13 +33,16 @@ import CoffeeLoader from "@/components/ui/CoffeeLoader";
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrdersCount, setTotalOrdersCount] = useState(0);
+  const [dateRange, setDateRange] = useState("today");
   const [exportData, setExportData] = useState(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -67,6 +70,9 @@ export default function OrdersPage() {
     "DRAFT",
   ];
 
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const filterMenuRef = useRef(null);
+
   // Debounce search query
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -75,6 +81,17 @@ export default function OrdersPage() {
     }, 300);
     return () => clearTimeout(handler);
   }, [searchQuery]);
+
+  // Handle clicking outside filter menu
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
+        setIsFilterMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Fetch stats once on mount, or when status/search updates to keep metrics in sync
   const fetchStats = async () => {
@@ -146,6 +163,14 @@ export default function OrdersPage() {
         status: statusFilter
       });
 
+      if (dateRange !== 'all') {
+        queryParams.append('range', dateRange);
+      }
+
+      if (sortBy !== 'recent') {
+        queryParams.append('sort', sortBy);
+      }
+
       if (debouncedSearchQuery) {
         queryParams.append('search', debouncedSearchQuery);
       }
@@ -172,6 +197,7 @@ export default function OrdersPage() {
       console.error('Failed to fetch orders:', error);
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -182,7 +208,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [currentPage, statusFilter, debouncedSearchQuery]);
+  }, [currentPage, statusFilter, debouncedSearchQuery, dateRange, sortBy]);
 
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
@@ -358,13 +384,11 @@ export default function OrdersPage() {
     {
       id: "total",
       label: "Total Orders",
-      value: statusSummary.total || 0,
+      value: stats.totalOrders || 0,
       hint: "All orders today",
       icon: Coffee,
       iconBg: "bg-[#F3EDE5]",
       iconColor: "text-[#6B4423]",
-      trendUp: true,
-      trend: "+12%",
     },
     {
       id: "progress",
@@ -374,8 +398,6 @@ export default function OrdersPage() {
       icon: Activity,
       iconBg: "bg-[#FFF4E5]",
       iconColor: "text-[#E68A00]",
-      trendUp: true,
-      trend: "Live",
     },
     {
       id: "completed",
@@ -385,8 +407,6 @@ export default function OrdersPage() {
       icon: CheckCircle2,
       iconBg: "bg-[#E8F5E9]",
       iconColor: "text-[#2E7D32]",
-      trendUp: true,
-      trend: "+8%",
     },
     {
       id: "revenue",
@@ -396,8 +416,6 @@ export default function OrdersPage() {
       icon: DollarSign,
       iconBg: "bg-[#FFF8E1]",
       iconColor: "text-[#F9A825]",
-      trendUp: true,
-      trend: "+15%",
     },
   ];
 
@@ -682,9 +700,9 @@ export default function OrdersPage() {
     );
   };
 
-  if (loading) {
+  if (isInitialLoad) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-[80vh]">
         <CoffeeLoader size="lg" text="Loading Orders..." />
       </div>
     );
@@ -765,10 +783,6 @@ export default function OrdersPage() {
             <p className="text-[#3E2B21]/50 text-[12px] font-bold tracking-wide">Revenue Today</p>
             <div className="flex items-end justify-between mt-2">
               <p className="text-[28px] font-black text-[#3E2B21] leading-none">{formatCurrency(statusSummary.revenue)}</p>
-              <div className="flex items-center gap-1 text-green-600">
-                <ArrowUpRight className="h-4 w-4" />
-                <span className="text-xs font-bold">+15%</span>
-              </div>
             </div>
           </div>
         </div>
@@ -897,9 +911,100 @@ export default function OrdersPage() {
       {/* ═══════════════════════════════════════════════════════ */}
       <section className="rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] p-6 space-y-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-          <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-[#3E2B21]/50">
-            <Filter className="h-4 w-4" /> Filters
+          <div className="relative shrink-0" ref={filterMenuRef}>
+            <button 
+              onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+              className={`flex items-center gap-2 px-5 py-3.5 rounded-[18px] border text-sm font-bold transition-all outline-none ${
+                isFilterMenuOpen || (sortBy !== 'recent' || dateRange !== 'today')
+                  ? 'bg-[#3E2B21] text-white border-[#3E2B21] shadow-md'
+                  : 'bg-[#FDFCF7] text-[#3E2B21]/60 border-[#EBE4D5] hover:border-[#3E2B21]/30 hover:text-[#3E2B21]'
+              }`}
+            >
+              <Filter className="h-4 w-4" /> 
+              Filters
+              {(sortBy !== 'recent' || dateRange !== 'today' || statusFilter !== 'all') && (
+                <span className="flex h-2 w-2 rounded-full bg-orange-400"></span>
+              )}
+            </button>
+
+            {isFilterMenuOpen && (
+              <div className="absolute top-full left-0 mt-3 w-72 bg-white rounded-[24px] shadow-[0_20px_60px_rgba(62,43,33,0.15)] border border-[#EBE4D5]/60 z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-4 duration-200">
+                <div className="p-5 border-b border-[#EBE4D5]/60 bg-[#FDFCF7]">
+                  <h3 className="font-bold text-[#3E2B21] flex items-center justify-between">
+                    Advanced Filters
+                    <button onClick={() => setIsFilterMenuOpen(false)} className="text-[#3E2B21]/40 hover:text-[#3E2B21] outline-none">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </h3>
+                </div>
+
+                <div className="p-5 space-y-6">
+                  {/* Date Range Option */}
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#3E2B21]/40">Date Range</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={() => { setDateRange('today'); setCurrentPage(1); }}
+                        className={`py-2 rounded-xl text-xs font-bold border transition-colors outline-none ${dateRange === 'today' ? 'bg-[#3E2B21] text-white border-[#3E2B21]' : 'bg-white text-[#3E2B21]/60 border-[#EBE4D5] hover:border-[#3E2B21]/30'}`}
+                      >
+                        Today
+                      </button>
+                      <button 
+                        onClick={() => { setDateRange('all'); setCurrentPage(1); }}
+                        className={`py-2 rounded-xl text-xs font-bold border transition-colors outline-none ${dateRange === 'all' ? 'bg-[#3E2B21] text-white border-[#3E2B21]' : 'bg-white text-[#3E2B21]/60 border-[#EBE4D5] hover:border-[#3E2B21]/30'}`}
+                      >
+                        All-Time
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sort By Option */}
+                  <div className="space-y-3">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#3E2B21]/40">Sort Order</p>
+                    <div className="space-y-2">
+                      {[
+                        { id: 'recent', label: 'Recent First' },
+                        { id: 'oldest', label: 'Oldest First' },
+                        { id: 'highest', label: 'Highest Total' },
+                        { id: 'lowest', label: 'Lowest Total' }
+                      ].map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => { setSortBy(opt.id); setCurrentPage(1); }}
+                          className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors outline-none ${
+                            sortBy === opt.id 
+                              ? 'bg-[#F5EFE6] text-[#3E2B21]' 
+                              : 'text-[#3E2B21]/60 hover:bg-[#FDFCF7] hover:text-[#3E2B21]'
+                          }`}
+                        >
+                          {opt.label}
+                          {sortBy === opt.id && <CheckCircle2 className="h-4 w-4 text-[#6B4423]" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 border-t border-[#EBE4D5]/60 bg-white">
+                  <button 
+                    onClick={() => {
+                      setSearchQuery("");
+                      setDebouncedSearchQuery("");
+                      setStatusFilter("all");
+                      setDateRange("today");
+                      setSortBy("recent");
+                      setCurrentPage(1);
+                      setIsFilterMenuOpen(false);
+                    }}
+                    className="w-full py-3 rounded-[14px] bg-[#FDFCF7] border border-[#EBE4D5] text-[#3E2B21] text-sm font-bold hover:bg-[#F5EFE6] transition-colors outline-none"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#3E2B21]/30 h-5 w-5" />
             <input
@@ -910,9 +1015,19 @@ export default function OrdersPage() {
               className="w-full pl-12 pr-4 py-3.5 rounded-[20px] border border-[#EBE4D5] focus:border-[#3E2B21]/30 focus:outline-none focus:ring-2 focus:ring-[#3E2B21]/10 transition-all bg-[#FDFCF7] text-sm font-medium text-[#3E2B21] placeholder:text-[#3E2B21]/30"
             />
           </div>
-          <div className="inline-flex items-center gap-2 rounded-[18px] border border-[#EBE4D5] px-5 py-3.5 text-sm text-[#3E2B21]/60 font-medium bg-[#FDFCF7]">
-            <Calendar className="h-4 w-4" /> Today
-          </div>
+          <button
+            onClick={() => {
+              setDateRange(prev => prev === 'today' ? 'all' : 'today');
+              setCurrentPage(1);
+            }}
+            className={`inline-flex items-center gap-2 rounded-[18px] border px-5 py-3.5 text-sm font-bold transition-all ${
+              dateRange === 'today'
+                ? 'bg-[#3E2B21] text-white border-[#3E2B21] shadow-md'
+                : 'bg-[#FDFCF7] text-[#3E2B21]/60 border-[#EBE4D5] hover:border-[#3E2B21]/30 hover:text-[#3E2B21]'
+            }`}
+          >
+            <Calendar className="h-4 w-4" /> {dateRange === 'today' ? 'Today' : 'All-Time'}
+          </button>
         </div>
 
         {/* Status Pill Filters */}
@@ -957,7 +1072,13 @@ export default function OrdersPage() {
       {/* ═══════════════════════════════════════════════════════ */}
       {/*  ORDERS TABLE                                         */}
       {/* ═══════════════════════════════════════════════════════ */}
-      <section className="rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] overflow-hidden">
+      <section className="rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] overflow-hidden relative min-h-[300px]">
+        {loading && !isInitialLoad && (
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-10 flex items-center justify-center">
+            <CoffeeLoader size="md" text="Updating..." />
+          </div>
+        )}
+        
         {orders.length === 0 ? (
           <div className="text-center py-24 space-y-4">
             <div className="h-16 w-16 rounded-full bg-[#F5EFE6] flex items-center justify-center mx-auto">

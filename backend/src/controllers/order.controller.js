@@ -279,10 +279,16 @@ exports.createOrder = async (req, res) => {
 
 exports.getOrders = async (req, res) => {
   try {
-    const { sessionId, status, page, limit, search } = req.query;
+    const { sessionId, status, page, limit, search, range, sort } = req.query;
     const filter = {};
     if (sessionId) filter.sessionId = sessionId;
     if (status && status !== 'all') filter.status = status;
+
+    if (range === 'today' || range === 'day') {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      filter.createdAt = { gte: startOfDay };
+    }
 
     if (search) {
       filter.OR = [
@@ -293,6 +299,11 @@ exports.getOrders = async (req, res) => {
         { table: { name: { contains: search, mode: 'insensitive' } } }
       ];
     }
+
+    let orderBy = { createdAt: 'desc' };
+    if (sort === 'oldest') orderBy = { createdAt: 'asc' };
+    else if (sort === 'highest') orderBy = { totalAmount: 'desc' };
+    else if (sort === 'lowest') orderBy = { totalAmount: 'asc' };
 
     if (page || limit) {
       const pageNum = parseInt(page) || 1;
@@ -322,7 +333,7 @@ exports.getOrders = async (req, res) => {
               select: { id: true, name: true, role: true }
             }
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy,
           skip,
           take: limitNum
         }),
@@ -362,7 +373,7 @@ exports.getOrders = async (req, res) => {
           select: { id: true, name: true, role: true }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy
     });
     res.json(orders);
   } catch (error) {
