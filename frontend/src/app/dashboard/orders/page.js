@@ -709,21 +709,21 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
 
       {/* ═══════════════════════════════════════════════════════ */}
       {/*  HERO SECTION — warm cream with coffee illustration   */}
       {/* ═══════════════════════════════════════════════════════ */}
       <section className="flex flex-col xl:flex-row gap-6">
         {/* Left — Hero Text */}
-        <div className="relative flex-1 bg-[#FDFCF7] rounded-[40px] p-8 lg:p-12 shadow-[0_4px_20px_rgba(62,43,33,0.02)] border border-[#EBE4D5]/60 overflow-hidden flex flex-col justify-center min-h-[220px]">
+        <div className="relative flex-1 bg-[#FDFCF7] rounded-[24px] sm:rounded-[40px] p-6 sm:p-8 lg:p-12 shadow-[0_4px_20px_rgba(62,43,33,0.02)] border border-[#EBE4D5]/60 overflow-hidden flex flex-col justify-center min-h-[180px] sm:min-h-[220px]">
           <div className="relative z-10 max-w-lg space-y-5">
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#FCF8F2] text-[#3E2B21] text-sm font-semibold border border-[#EBE4D5]">
               <ShoppingBag className="h-4 w-4" /> Orders Management
             </div>
 
             <div>
-              <h1 className="text-3xl lg:text-[44px] font-black leading-[1.15] text-[#3E2B21] font-serif tracking-tight">
+              <h1 className="text-2xl sm:text-3xl lg:text-[44px] font-black leading-[1.15] text-[#3E2B21] font-serif tracking-tight">
                 Keep every order flowing smoothly.
               </h1>
               <p className="text-[#3E2B21]/60 text-base mt-3 font-medium leading-relaxed max-w-md">
@@ -736,12 +736,12 @@ export default function OrdersPage() {
           <img
             src="/orders_hero_1781584318907.png"
             alt="Coffee"
-            className="absolute -right-16 -bottom-10 h-[130%] object-contain opacity-30 pointer-events-none"
+            className="absolute -right-16 -bottom-10 h-[130%] object-contain opacity-30 pointer-events-none hidden md:block"
           />
         </div>
 
         {/* Right — Date + Quick Actions */}
-        <div className="w-full xl:w-[380px] flex flex-col gap-5">
+        <div className="w-full xl:w-[380px] flex flex-col gap-4 sm:gap-5">
           <div className="bg-[#FDFCF7] rounded-[32px] p-6 shadow-[0_4px_20px_rgba(62,43,33,0.02)] border border-[#EBE4D5]/60 flex items-center justify-between text-sm text-[#3E2B21] font-semibold">
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-[#3E2B21]/70" />
@@ -863,7 +863,7 @@ export default function OrdersPage() {
       {/* ═══════════════════════════════════════════════════════ */}
       {/*  QUICK STATS — horizontal cards                       */}
       {/* ═══════════════════════════════════════════════════════ */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+      <section className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5">
         {quickStats.map((stat) => {
           const Icon = stat.icon;
           const displayValue =
@@ -909,7 +909,7 @@ export default function OrdersPage() {
       {/* ═══════════════════════════════════════════════════════ */}
       {/*  FILTERS & SEARCH                                     */}
       {/* ═══════════════════════════════════════════════════════ */}
-      <section className="rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] p-6 space-y-5">
+      <section className="rounded-[24px] sm:rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] p-4 sm:p-6 space-y-4 sm:space-y-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
           <div className="relative shrink-0" ref={filterMenuRef}>
             <button 
@@ -1072,7 +1072,7 @@ export default function OrdersPage() {
       {/* ═══════════════════════════════════════════════════════ */}
       {/*  ORDERS TABLE                                         */}
       {/* ═══════════════════════════════════════════════════════ */}
-      <section className="rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] overflow-hidden relative min-h-[300px]">
+      <section className="rounded-[24px] sm:rounded-[32px] bg-white border border-[#EBE4D5]/60 shadow-[0_4px_20px_rgba(62,43,33,0.02)] overflow-hidden relative min-h-[300px]">
         {loading && !isInitialLoad && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-10 flex items-center justify-center">
             <CoffeeLoader size="md" text="Updating..." />

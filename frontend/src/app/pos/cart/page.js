@@ -185,17 +185,17 @@ export default function CartPage() {
       />
 
       {/* Header */}
-      <div className="bg-white border-b border-[#EBE4D5] p-6 shadow-sm">
+      <div className="bg-white border-b border-[#EBE4D5] p-4 sm:p-6 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <button
             onClick={() => window.location.href = '/pos/terminal'}
-            className="flex items-center gap-2 text-[#8C8775] hover:text-[#3E2B21] transition-colors"
+            className="flex items-center gap-1 sm:gap-2 text-[#8C8775] hover:text-[#3E2B21] transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span className="font-semibold">Back to Products</span>
+            <span className="font-semibold text-sm sm:text-base hidden sm:inline">Back to Products</span>
           </button>
 
-          <h1 className="text-3xl font-black text-[#3E2B21]">Shopping Cart</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#3E2B21]">Shopping Cart</h1>
 
           <button
             onClick={() => clearCart()}
@@ -208,10 +208,10 @@ export default function CartPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <div className="max-w-6xl mx-auto h-full flex gap-6 p-6">
+      <div className="flex-1 overflow-auto pb-20 lg:pb-0">
+        <div className="max-w-6xl mx-auto h-full flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
           {/* Left: Cart Items */}
-          <div className="flex-1 overflow-y-auto pr-2">
+          <div className="flex-1 lg:overflow-y-auto lg:pr-2">
             <div className="space-y-4">
               {cart.map((item) => (
                 <div
@@ -288,7 +288,7 @@ export default function CartPage() {
           </div>
 
           {/* Right: Summary & Coupon */}
-          <div className="w-96 space-y-6">
+          <div className="w-full lg:w-96 space-y-4 sm:space-y-6">
             {/* Customer Info */}
             <div className="bg-white rounded-[2rem] p-6 shadow-md border border-[#EBE4D5]">
               <div className="flex items-center justify-between mb-4">

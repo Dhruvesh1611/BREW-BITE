@@ -272,27 +272,27 @@ export default function DashboardPage() {
       <section className="flex flex-col lg:flex-row gap-6">
         
         {/* LEFT: Hero Banner */}
-        <div className="relative flex-1 bg-[#FDFCF7] rounded-[32px] p-10 shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-[#F0EBE1] overflow-hidden flex flex-col justify-between min-h-[340px]">
+        <div className="relative flex-1 bg-[#FDFCF7] rounded-[24px] sm:rounded-[32px] p-6 sm:p-8 lg:p-10 shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-[#F0EBE1] overflow-hidden flex flex-col justify-between min-h-[260px] sm:min-h-[340px]">
           <div className="relative z-10 max-w-lg space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-transparent text-[#3E2B21] text-sm font-bold border border-[#EBE4D5]">
               <span className="text-base">👋</span> Welcome back to Brew & Bite
             </div>
 
             <div>
-              <h1 className="text-5xl font-black leading-[1.1] text-[#3E2B21] font-serif tracking-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-[#3E2B21] font-serif tracking-tight">
                 Brewing insights for today's service.
               </h1>
-              <p className="text-[#8C8775] text-base mt-4 font-bold leading-relaxed max-w-sm">
+              <p className="text-[#8C8775] text-sm sm:text-base mt-3 sm:mt-4 font-bold leading-relaxed max-w-sm">
                 Track revenue, monitor orders, and keep your baristas aligned with a single glance.
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-1 bg-[#FDFCF7] rounded-full border border-[#F0EBE1] mt-4 p-1 shadow-sm">
+            <div className="inline-flex items-center gap-1 bg-[#FDFCF7] rounded-full border border-[#F0EBE1] mt-3 sm:mt-4 p-1 shadow-sm flex-wrap">
               {timeframeOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => setActiveRange(option.value)}
-                  className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${
+                  className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
                     activeRange === option.value
                       ? "bg-[#3E2B21] text-white shadow-md"
                       : "text-[#8C8775] hover:text-[#3E2B21]"
@@ -307,12 +307,12 @@ export default function DashboardPage() {
           <img 
             src="/hero-coffee.png" 
             alt="Coffee Cups" 
-            className="absolute -right-8 bottom-0 h-[115%] object-contain pointer-events-none opacity-60 mix-blend-multiply"
+            className="absolute -right-8 bottom-0 h-[115%] object-contain pointer-events-none opacity-60 mix-blend-multiply hidden md:block"
           />
         </div>
 
         {/* RIGHT: Quick Actions & Overview Cards */}
-        <div className="w-full lg:w-[420px] flex flex-col gap-6">
+        <div className="w-full lg:w-[420px] flex flex-col gap-4 sm:gap-6">
           
           {/* Top Row: Date & Notification */}
           <div className="flex gap-4">
@@ -361,7 +361,7 @@ export default function DashboardPage() {
       </section>
 
       {/* ✅ STATS GRID */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <StatsCard title="Total Revenue" value={`₹${stats?.totalRevenue || 0}`} icon={DollarSign} />
         <StatsCard 
           title={`${activeRange.charAt(0).toUpperCase() + activeRange.slice(1)}'s Revenue`} 
@@ -396,9 +396,9 @@ export default function DashboardPage() {
       {/* ✅ CHARTS & ACTIVITY */}
       <section className="space-y-6">
         {/* Line Chart */}
-        <div className="rounded-[32px] bg-white p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#F0EBE1]">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-[#3E2B21] text-xl">Revenue by Category</h3>
+        <div className="rounded-[24px] sm:rounded-[32px] bg-white p-4 sm:p-6 lg:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#F0EBE1]">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="font-bold text-[#3E2B21] text-base sm:text-xl">Revenue by Category</h3>
             <TrendingUp className="h-5 w-5 text-[#8C8775]" />
           </div>
 
@@ -440,9 +440,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Top Selling & Heatmap Grid */}
-        <div className="grid xl:grid-cols-2 gap-6">
+        <div className="grid xl:grid-cols-2 gap-4 sm:gap-6">
           {/* Top Selling Products List */}
-          <div className="rounded-[32px] bg-white p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#F0EBE1] flex flex-col">
+          <div className="rounded-[24px] sm:rounded-[32px] bg-white p-4 sm:p-6 lg:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#F0EBE1] flex flex-col">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-xl font-bold text-[#3E2B21]">Top Selling Products</h3>
@@ -451,7 +451,7 @@ export default function DashboardPage() {
               <Sparkles className="h-6 w-6 text-[#3E2B21]" />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 flex-1">
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-8 flex-1">
               <div className="space-y-4">
                 {chartsLoading ? (
                    Array(5).fill(0).map((_, i) => (
@@ -539,7 +539,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Activity Heatmap */}
-          <div className="rounded-[32px] bg-white p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#F0EBE1] flex flex-col">
+          <div className="rounded-[24px] sm:rounded-[32px] bg-white p-4 sm:p-6 lg:p-8 shadow-[0_2px_10px_rgba(0,0,0,0.02)] border border-[#F0EBE1] flex flex-col">
             <h3 className="font-bold text-[#3E2B21] mb-2 text-xl">Busy Hours</h3>
             <p className="text-[#8C8775] text-sm mb-6 font-medium">Heatmap of order volume by time of day.</p>
             {chartsLoading ? (

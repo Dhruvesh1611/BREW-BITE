@@ -158,15 +158,15 @@ export default function KitchenPage() {
   const completedOrders = orders.filter(o => o.status === 'COMPLETED');
 
   const KitchenColumn = ({ title, activeOrders, icon: Icon, colorClass, textClass, dotClass, nextStatus, emptyText }) => (
-    <div className="flex-1 flex flex-col min-w-0 bg-white/40 backdrop-blur-xl rounded-[2.5rem] border border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.02)] overflow-hidden h-full">
+    <div className="flex-1 flex flex-col min-w-[300px] sm:min-w-[340px] bg-white/40 backdrop-blur-xl rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.02)] overflow-hidden h-full">
       {/* Column Header */}
-      <div className={`p-6 border-b border-white/50 ${colorClass}`}>
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-            <Icon className={`h-6 w-6 ${textClass}`} />
+      <div className={`p-4 sm:p-6 border-b border-white/50 ${colorClass}`}>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl bg-white shadow-sm flex items-center justify-center">
+            <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${textClass}`} />
           </div>
           <div>
-            <h2 className={`text-xl font-black tracking-tight ${textClass}`}>{title}</h2>
+            <h2 className={`text-lg sm:text-xl font-black tracking-tight ${textClass}`}>{title}</h2>
             <div className="flex items-center gap-2 mt-1">
               <span className={`h-2 w-2 rounded-full ${activeOrders.length > 0 ? `${dotClass} animate-pulse` : 'bg-gray-300'}`}></span>
               <p className="text-sm font-semibold text-gray-500">{activeOrders.length} ACTIVE</p>
@@ -176,7 +176,7 @@ export default function KitchenPage() {
       </div>
 
       {/* Orders List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
         {activeOrders.length === 0 ? (
           <div className="text-center py-24 flex flex-col items-center justify-center h-full opacity-60">
             <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
@@ -280,41 +280,41 @@ export default function KitchenPage() {
       {/* Notifications are now managed by global PopupProvider */}
 
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.03)] border-b border-gray-100 z-20 px-8 py-5">
+      <header className="bg-white/80 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.03)] border-b border-gray-100 z-20 px-4 sm:px-6 lg:px-8 py-3 sm:py-5">
         <div className="flex items-center justify-between max-w-[1920px] mx-auto w-full">
-          <div className="flex items-center gap-6">
-            <div className="h-16 w-16 relative bg-white rounded-[1.2rem] flex items-center justify-center shadow-lg shadow-[#3E2B21]/10 transform hover:rotate-6 transition-transform duration-300 cursor-pointer overflow-hidden border border-gray-100 p-2">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <div className="h-10 w-10 sm:h-16 sm:w-16 relative bg-white rounded-xl sm:rounded-[1.2rem] flex items-center justify-center shadow-lg shadow-[#3E2B21]/10 transform hover:rotate-6 transition-transform duration-300 cursor-pointer overflow-hidden border border-gray-100 p-1 sm:p-2">
                <Image src="/brew_and_bite_logo.png" alt="Logo" width={48} height={48} className="object-contain" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-[#3E2B21] tracking-tight">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#3E2B21] tracking-tight">
                 Kitchen Display
               </h1>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
                 <span className="h-2 w-2 rounded-full bg-[#D4A373] animate-pulse"></span>
                 <p className="text-gray-500 font-medium text-sm">Live Feed • {toCookOrders.length + preparingOrders.length} Active</p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Stats Pills */}
-            <div className="hidden lg:flex items-center gap-4 mr-8">
-              <div className="px-5 py-2.5 bg-orange-50 rounded-2xl border border-orange-100 flex flex-col items-center min-w-[100px]">
-                <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Pending</span>
-                <span className="text-2xl font-black text-orange-600 leading-none mt-1">{toCookOrders.length}</span>
+            <div className="hidden sm:flex items-center gap-2 sm:gap-4 mr-2 sm:mr-8">
+              <div className="px-3 sm:px-5 py-1.5 sm:py-2.5 bg-orange-50 rounded-xl sm:rounded-2xl border border-orange-100 flex flex-col items-center min-w-[70px] sm:min-w-[100px]">
+                <span className="text-[9px] sm:text-[10px] font-bold text-orange-400 uppercase tracking-widest">Pending</span>
+                <span className="text-lg sm:text-2xl font-black text-orange-600 leading-none mt-0.5 sm:mt-1">{toCookOrders.length}</span>
               </div>
-              <div className="px-5 py-2.5 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col items-center min-w-[100px]">
-                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Cooking</span>
-                <span className="text-2xl font-black text-blue-600 leading-none mt-1">{preparingOrders.length}</span>
+              <div className="px-3 sm:px-5 py-1.5 sm:py-2.5 bg-blue-50 rounded-xl sm:rounded-2xl border border-blue-100 flex flex-col items-center min-w-[70px] sm:min-w-[100px]">
+                <span className="text-[9px] sm:text-[10px] font-bold text-blue-400 uppercase tracking-widest">Cooking</span>
+                <span className="text-lg sm:text-2xl font-black text-blue-600 leading-none mt-0.5 sm:mt-1">{preparingOrders.length}</span>
               </div>
             </div>
 
-            <div className="h-10 w-px bg-gray-200 mx-2"></div>
+            <div className="h-10 w-px bg-gray-200 mx-0 sm:mx-2 hidden sm:block"></div>
 
             <button
               onClick={() => fetchOrders()}
-              className="h-12 w-12 bg-white border-2 border-gray-100 text-gray-500 rounded-2xl hover:border-[#3E2B21] hover:text-[#3E2B21] transition-all flex items-center justify-center group"
+              className="h-10 w-10 sm:h-12 sm:w-12 bg-white border-2 border-gray-100 text-gray-500 rounded-xl sm:rounded-2xl hover:border-[#3E2B21] hover:text-[#3E2B21] transition-all flex items-center justify-center group"
               title="Refresh"
             >
               <RefreshCw className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
@@ -322,18 +322,18 @@ export default function KitchenPage() {
 
             <button
               onClick={() => window.location.href = '/'}
-              className="px-6 py-3 bg-[#3E2B21] text-white rounded-2xl font-bold hover:bg-[#2C1810] shadow-lg shadow-[#3E2B21]/20 hover:shadow-xl transition-all flex items-center gap-2 transform active:scale-95"
+              className="px-3 sm:px-6 py-2 sm:py-3 bg-[#3E2B21] text-white rounded-xl sm:rounded-2xl font-bold hover:bg-[#2C1810] shadow-lg shadow-[#3E2B21]/20 hover:shadow-xl transition-all flex items-center gap-2 transform active:scale-95 text-sm sm:text-base"
             >
-              <LogOut className="h-5 w-5" />
-              Exit KDS
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">Exit KDS</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Board */}
-      <div className="flex-1 p-8 overflow-hidden">
-        <div className="flex gap-8 h-full max-w-[1920px] mx-auto w-full">
+      <div className="flex-1 p-3 sm:p-5 lg:p-8 overflow-hidden">
+        <div className="flex gap-3 sm:gap-5 lg:gap-8 h-full max-w-[1920px] mx-auto w-full overflow-x-auto pb-2">
           <KitchenColumn
             title="To Cook"
             activeOrders={toCookOrders}
