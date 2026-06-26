@@ -130,7 +130,7 @@ export default function POSTerminalPage() {
   return (
     <div className="flex h-full gap-3 sm:gap-6 overflow-hidden">
       {/* Left Pane (Fixed header, scrollable cards) */}
-      <div className="flex-1 flex flex-col gap-3 sm:gap-6 overflow-hidden">
+      <div className="flex-1 flex flex-col gap-2 sm:gap-6 overflow-hidden">
         <CustomerModal
           isOpen={isCustomerModalOpen}
           onClose={() => setIsCustomerModalOpen(false)}
@@ -144,19 +144,19 @@ export default function POSTerminalPage() {
           </div>
         ) : (
           <>
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white/70 backdrop-blur-xl p-4 sm:p-5 rounded-[24px] sm:rounded-[32px] shadow-[0_8px_30px_rgb(62,43,33,0.04)] border border-white shrink-0 gap-3 sm:gap-4">
-              <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+            {/* Header — compact on mobile, full on desktop */}
+            <div className="flex items-center justify-between bg-white/70 backdrop-blur-xl px-3 py-2 sm:p-5 rounded-[16px] sm:rounded-[32px] shadow-[0_8px_30px_rgb(62,43,33,0.04)] border border-white shrink-0">
+              <div className="flex items-center gap-2 sm:gap-6 flex-1 min-w-0">
                 <button
                   onClick={() => handleOpenCustomerModal()}
-                  className="flex items-center gap-2 sm:gap-4 hover:bg-white px-3 sm:px-4 py-2 sm:py-3 rounded-2xl transition-all duration-300 group shadow-sm border border-transparent hover:border-[#EBE4D5] hover:shadow-md"
+                  className="flex items-center gap-2 sm:gap-4 hover:bg-white px-2 sm:px-4 py-1.5 sm:py-3 rounded-xl sm:rounded-2xl transition-all duration-300 group shadow-sm border border-transparent hover:border-[#EBE4D5] hover:shadow-md min-w-0"
                 >
-                  <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-[14px] sm:rounded-[18px] flex items-center justify-center transition-colors ${customer ? 'bg-[#3E2B21] text-[#FDFCF7]' : 'bg-[#F3EDE5] text-[#8C8775] group-hover:bg-[#EBE4D5] group-hover:text-[#3E2B21]'}`}>
-                    <User className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <div className={`h-8 w-8 sm:h-12 sm:w-12 rounded-[10px] sm:rounded-[18px] flex items-center justify-center shrink-0 transition-colors ${customer ? 'bg-[#3E2B21] text-[#FDFCF7]' : 'bg-[#F3EDE5] text-[#8C8775] group-hover:bg-[#EBE4D5] group-hover:text-[#3E2B21]'}`}>
+                    <User className="h-4 w-4 sm:h-6 sm:w-6" />
                   </div>
-                  <div className="text-left">
-                    <p className="text-[9px] sm:text-[10px] text-[#8C8775] font-bold uppercase tracking-[0.15em] mb-0.5">Customer</p>
-                    <p className={`text-sm sm:text-base font-black tracking-tight ${customer ? 'text-[#3E2B21]' : 'text-[#8C8775]'}`}>
+                  <div className="text-left min-w-0">
+                    <p className="hidden sm:block text-[10px] text-[#8C8775] font-bold uppercase tracking-[0.15em] mb-0.5">Customer</p>
+                    <p className={`text-xs sm:text-base font-black tracking-tight truncate ${customer ? 'text-[#3E2B21]' : 'text-[#8C8775]'}`}>
                       {customer ? customer.name : 'Select Customer'}
                     </p>
                   </div>
@@ -177,7 +177,7 @@ export default function POSTerminalPage() {
                 {orderId && (
                   <>
                     <div className="hidden sm:block h-10 w-px bg-[#EBE4D5]"></div>
-                    <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-black bg-orange-50 text-[#3E2B21] uppercase tracking-[0.1em] border border-orange-100 flex items-center gap-2 shadow-sm">
+                    <span className="hidden sm:flex px-4 py-2 rounded-full text-xs font-black bg-orange-50 text-[#3E2B21] uppercase tracking-[0.1em] border border-orange-100 items-center gap-2 shadow-sm">
                       <span className="h-2 w-2 rounded-full bg-orange-400 animate-pulse"></span>
                       Editing Order
                     </span>
@@ -185,7 +185,7 @@ export default function POSTerminalPage() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
                 <button
                   onClick={() => window.location.href = '/pos/cart'}
                   className="hidden lg:flex px-8 py-3.5 bg-[#3E2B21] text-[#FDFCF7] rounded-[20px] font-black hover:bg-[#2C1810] transition-all shadow-[0_8px_20px_rgb(62,43,33,0.2)] hover:shadow-[0_12px_25px_rgb(62,43,33,0.3)] hover:-translate-y-0.5 items-center gap-2 text-sm"
@@ -195,22 +195,22 @@ export default function POSTerminalPage() {
                 </button>
                 <button
                   onClick={() => fetchProducts()}
-                  className="h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center bg-white hover:bg-[#F3EDE5] rounded-[16px] sm:rounded-[20px] text-[#3E2B21] transition-all shadow-sm border border-[#EBE4D5]"
+                  className="h-8 w-8 sm:h-12 sm:w-12 flex items-center justify-center bg-white hover:bg-[#F3EDE5] rounded-[10px] sm:rounded-[20px] text-[#3E2B21] transition-all shadow-sm border border-[#EBE4D5]"
                 >
-                  <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <RefreshCw className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                 </button>
                 <button
                   onClick={() => setShowCloseSessionModal(true)}
-                  className="px-4 sm:px-6 py-2.5 sm:py-3.5 bg-red-50/50 text-red-600 rounded-[16px] sm:rounded-[20px] font-bold hover:bg-red-50 transition-colors flex items-center gap-2 text-xs sm:text-sm border border-red-100/50"
+                  className="h-8 sm:h-auto px-2.5 sm:px-6 py-1.5 sm:py-3.5 bg-red-50/50 text-red-600 rounded-[10px] sm:rounded-[20px] font-bold hover:bg-red-50 transition-colors flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm border border-red-100/50"
                 >
-                  <Power className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Power className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
                   <span className="hidden sm:inline">End Shift</span>
                   <span className="sm:hidden">End</span>
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-col gap-5 shrink-0">
+            <div className="flex flex-col gap-2 sm:gap-5 shrink-0">
               {/* Search */}
               <div className="relative w-full">
                 <Search className="absolute left-4 sm:left-5 top-1/2 transform -translate-y-1/2 text-[#8C8775] h-4 w-4 sm:h-5 sm:w-5" />
@@ -219,15 +219,15 @@ export default function POSTerminalPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search products..."
-                  className="w-full pl-11 sm:pl-14 pr-4 sm:pr-5 py-3 sm:py-3.5 rounded-[16px] sm:rounded-[20px] border-2 border-white focus:border-[#3E2B21]/20 focus:outline-none transition-all bg-white shadow-[0_8px_30px_rgb(62,43,33,0.04)] font-semibold text-[#3E2B21] placeholder:text-[#8C8775]/60 text-sm sm:text-base"
+                  className="w-full pl-10 sm:pl-14 pr-4 sm:pr-5 py-2.5 sm:py-3.5 rounded-[12px] sm:rounded-[20px] border-2 border-white focus:border-[#3E2B21]/20 focus:outline-none transition-all bg-white shadow-[0_8px_30px_rgb(62,43,33,0.04)] font-semibold text-[#3E2B21] placeholder:text-[#8C8775]/60 text-sm sm:text-base"
                 />
               </div>
 
-              {/* Categories */}
-              <div className="flex flex-wrap gap-2 sm:gap-3 pb-2">
+              {/* Categories — horizontal scroll on mobile, wrap on desktop */}
+              <div className="flex gap-2 sm:gap-3 pb-1 sm:pb-2 overflow-x-auto sm:flex-wrap scrollbar-none -mx-1 px-1">
                 <button
                   onClick={() => setSelectedCategory(null)}
-                  className={`px-4 sm:px-7 py-2.5 sm:py-3 rounded-[16px] sm:rounded-[20px] font-black text-xs sm:text-sm transition-all duration-300 shadow-sm ${!selectedCategory ? 'bg-[#3E2B21] text-[#FDFCF7] shadow-[0_8px_20px_rgb(62,43,33,0.2)] scale-105' : 'bg-white text-[#8C8775] hover:bg-[#FDFCF7] border border-[#EBE4D5] hover:text-[#3E2B21]'
+                  className={`px-3.5 sm:px-7 py-2 sm:py-3 rounded-[12px] sm:rounded-[20px] font-black text-[11px] sm:text-sm transition-all duration-300 shadow-sm whitespace-nowrap shrink-0 ${!selectedCategory ? 'bg-[#3E2B21] text-[#FDFCF7] shadow-[0_8px_20px_rgb(62,43,33,0.2)]' : 'bg-white text-[#8C8775] hover:bg-[#FDFCF7] border border-[#EBE4D5] hover:text-[#3E2B21]'
                     }`}
                 >
                   All Menu
@@ -236,7 +236,7 @@ export default function POSTerminalPage() {
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.name)}
-                    className={`px-4 sm:px-7 py-2.5 sm:py-3 rounded-[16px] sm:rounded-[20px] font-black text-xs sm:text-sm transition-all duration-300 shadow-sm ${selectedCategory === category.name ? 'bg-[#3E2B21] text-[#FDFCF7] shadow-[0_8px_20px_rgb(62,43,33,0.2)] scale-105' : 'bg-white text-[#8C8775] hover:bg-[#FDFCF7] border border-[#EBE4D5] hover:text-[#3E2B21]'
+                    className={`px-3.5 sm:px-7 py-2 sm:py-3 rounded-[12px] sm:rounded-[20px] font-black text-[11px] sm:text-sm transition-all duration-300 shadow-sm whitespace-nowrap shrink-0 ${selectedCategory === category.name ? 'bg-[#3E2B21] text-[#FDFCF7] shadow-[0_8px_20px_rgb(62,43,33,0.2)]' : 'bg-white text-[#8C8775] hover:bg-[#FDFCF7] border border-[#EBE4D5] hover:text-[#3E2B21]'
                       }`}
                   >
                     {category.name}

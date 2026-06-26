@@ -521,7 +521,9 @@ export default function SettingsPage() {
                     <Plus className="h-4 w-4" /> Add Staff
                   </button>
                 </div>
-                <div className="overflow-hidden rounded-[20px] border border-[#EBE4D5]/60">
+
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-hidden rounded-[20px] border border-[#EBE4D5]/60">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-[#FDFCF7] border-b border-[#EBE4D5]/60">
@@ -552,6 +554,40 @@ export default function SettingsPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden space-y-3">
+                  {users.map((u) => (
+                    <div key={u.id} className="p-4 rounded-[20px] border border-[#EBE4D5]/60 bg-[#FDFCF7] hover:shadow-[0_4px_20px_rgba(62,43,33,0.04)] transition-all">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-bold text-[#3E2B21] text-sm truncate">{u.name}</h4>
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#F5EFE6] text-[#3E2B21]/60 border border-[#EBE4D5] shrink-0">{u.role}</span>
+                          </div>
+                          <p className="text-xs text-[#3E2B21]/50 font-medium truncate">{u.email}</p>
+                        </div>
+                        <div className="flex gap-2 shrink-0">
+                          <button onClick={() => { setEditingUser(u); setShowUserModal(true); }} className="h-9 w-9 rounded-full border border-[#EBE4D5] hover:bg-[#F5EFE6] flex items-center justify-center transition-all">
+                            <Edit2 className="h-3.5 w-3.5 text-[#6B4423]" />
+                          </button>
+                          <button onClick={() => handleDeleteUser(u.id)} className="h-9 w-9 rounded-full border border-red-100 hover:bg-red-50 flex items-center justify-center transition-all">
+                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {users.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="h-14 w-14 rounded-full bg-[#F5EFE6] flex items-center justify-center mx-auto mb-4">
+                        <Users className="h-7 w-7 text-[#3E2B21]/30" />
+                      </div>
+                      <p className="text-[#3E2B21]/50 font-bold">No team members yet</p>
+                      <p className="text-sm text-[#3E2B21]/30 font-medium mt-1">Add staff to get started!</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
