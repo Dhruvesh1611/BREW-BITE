@@ -208,7 +208,7 @@ export default function CartPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto pb-20 lg:pb-0">
+      <div className="flex-1 overflow-auto pb-36 lg:pb-0">
         <div className="max-w-6xl mx-auto h-full flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
           {/* Left: Cart Items */}
           <div className="flex-1 lg:overflow-y-auto lg:pr-2">
@@ -390,8 +390,8 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-3 pt-4">
+              {/* Action Buttons - Desktop only (mobile has fixed bar) */}
+              <div className="hidden lg:block space-y-3 pt-4">
                 <button
                   onClick={handleCheckout}
                   className="w-full bg-[#3E2B21] text-white py-3.5 rounded-[2rem] font-bold text-md hover:bg-[#2C1810] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
@@ -410,6 +410,26 @@ export default function CartPage() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Fixed Checkout Bar - Mobile/Tablet only */}
+      <div 
+        className="lg:hidden fixed left-0 right-0 z-40 bg-white border-t border-[#EBE4D5] px-5 py-4 shadow-[0_-8px_30px_rgba(62,43,33,0.08)]"
+        style={{ bottom: "calc(72px + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="flex items-center justify-between gap-5 max-w-lg mx-auto">
+          <div>
+            <p className="text-[11px] text-[#8C8775] font-bold uppercase tracking-wider mb-0.5">Total Amount</p>
+            <p className="text-2xl font-black text-[#3E2B21] leading-none">₹{total.toFixed(2)}</p>
+          </div>
+          <button
+            onClick={handleCheckout}
+            className="flex-1 max-w-[220px] bg-[#3E2B21] text-white py-3.5 rounded-2xl font-bold text-sm hover:bg-[#2C1810] transition-all shadow-lg flex items-center justify-center gap-2"
+          >
+            <CreditCard className="h-4 w-4" />
+            Proceed to Payment
+          </button>
         </div>
       </div>
     </div>
