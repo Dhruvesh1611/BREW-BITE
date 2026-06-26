@@ -149,7 +149,7 @@ export default function CartSidebar({ onAddCustomer }) {
   };
 
   return (
-    <aside className="w-[360px] bg-[#FDFCF7] border-l border-[#EBE4D5] flex flex-col h-full min-h-0 shadow-[-20px_0_50px_rgba(62,43,33,0.03)] relative z-10">
+    <aside className="hidden lg:flex w-[360px] bg-[#FDFCF7] border-l border-[#EBE4D5] flex-col h-full min-h-0 shadow-[-20px_0_50px_rgba(62,43,33,0.03)] relative z-10">
       <OrderTypeModal 
         isOpen={showOrderTypeModal} 
         onClose={() => setShowOrderTypeModal(false)} 
