@@ -208,8 +208,8 @@ export default function CartPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto pb-56 lg:pb-0">
-        <div className="max-w-6xl mx-auto h-full flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-6xl mx-auto min-h-full flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-6 pb-48 lg:pb-6">
           {/* Left: Cart Items */}
           <div className="flex-1 lg:overflow-y-auto lg:pr-2">
             <div className="space-y-4">
