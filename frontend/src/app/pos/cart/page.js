@@ -176,7 +176,7 @@ export default function CartPage() {
   const total = subtotal + tax - discount;
 
   return (
-    <div className="h-screen flex flex-col bg-[#FDFCF7]">
+    <div className="flex flex-col bg-[#FDFCF7] min-h-full rounded-2xl sm:rounded-[32px] overflow-hidden">
       <CustomerModal
         isOpen={isCustomerModalOpen}
         onClose={() => setIsCustomerModalOpen(false)}
@@ -208,10 +208,10 @@ export default function CartPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-6xl mx-auto min-h-full flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-6 pb-48 lg:pb-6">
+      <div className="flex-1">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-6 pb-48 lg:pb-12">
           {/* Left: Cart Items */}
-          <div className="flex-1 lg:overflow-y-auto lg:pr-2">
+          <div className="flex-1">
             <div className="space-y-4">
               {cart.map((item) => (
                 <div
