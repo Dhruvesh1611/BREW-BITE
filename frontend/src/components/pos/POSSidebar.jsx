@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   ShoppingBag,
@@ -10,12 +10,8 @@ import {
   LogOut,
   Menu,
   Timer,
-  LayoutDashboard,
   Receipt,
-  Settings,
   ShoppingCart,
-  Coffee,
-  X
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import CloseSessionModal from "@/components/pos/CloseSessionModal";
@@ -30,29 +26,31 @@ const posSidebarItems = [
 
 export default function POSSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showCloseSessionModal, setShowCloseSessionModal] = useState(false);
-
-  // Use session from localStorage strictly for display if needed
+  const [activeSession, setActiveSession] = useState(null);
+  const [logoutAfterClose, setLogoutAfterClose] = useState(false);
 
   const [shiftSales, setShiftSales] = useState(0);
 
   useEffect(() => {
     fetchShiftStats();
-    // Poll every minute
     const interval = setInterval(fetchShiftStats, 60000);
     return () => clearInterval(interval);
   }, []);
 
   const fetchShiftStats = async () => {
     try {
-      const activeSession = JSON.parse(localStorage.getItem('activeSession') || '{}');
-      if (!activeSession.id) return;
+      const session = JSON.parse(localStorage.getItem('activeSession') || '{}');
+      setActiveSession(session?.id ? session : null);
+      if (!session.id) return;
 
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`${API_URL}/orders?sessionId=${activeSession.id}`, {
+      const response = await fetch(`${API_URL}/orders?sessionId=${session.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -68,11 +66,75 @@ export default function POSSidebar() {
     }
   };
 
-  const handleCloseSession = (closingCash) => {
+  const performLogout = () => {
+    logout();
+    localStorage.removeItem('activeSession');
+    localStorage.removeItem('selectedTable');
+    localStorage.removeItem('isTakeaway');
+    router.push('/');
+  };
+
+  const handleLogoutClick = () => {
+    // Check if there's an active session
+    const session = JSON.parse(localStorage.getItem('activeSession') || '{}');
+    if (session?.id) {
+      // Session is open — show close session modal first
+      setActiveSession(session);
+      setLogoutAfterClose(true);
+      setShowCloseSessionModal(true);
+    } else {
+      // No active session — logout directly
+      performLogout();
+    }
+  };
+
+  const handleSessionCloseConfirm = async (closingCash) => {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001/api';
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`${API_URL}/sessions/${activeSession.id}/close`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ closingCash })
+      });
+
+      if (response.ok) {
+        localStorage.removeItem('activeSession');
+        localStorage.removeItem('selectedTable');
+        setShowCloseSessionModal(false);
+
+        if (logoutAfterClose) {
+          setLogoutAfterClose(false);
+          performLogout();
+        }
+      } else {
+        const err = await response.json();
+        alert(`Failed to close session: ${err.error || err.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error closing session:', error);
+      alert('Failed to close session');
+    }
   };
 
   return (
     <>
+      {/* Close Session Modal */}
+      {showCloseSessionModal && activeSession && (
+        <CloseSessionModal
+          session={activeSession}
+          onClose={() => {
+            setShowCloseSessionModal(false);
+            setLogoutAfterClose(false);
+          }}
+          onConfirm={handleSessionCloseConfirm}
+        />
+      )}
+
       {/* ═══════════════════════════════════════════════════════ */}
       {/*  MOBILE BOTTOM NAVIGATION BAR                         */}
       {/* ═══════════════════════════════════════════════════════ */}
@@ -84,7 +146,7 @@ export default function POSSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-200 min-w-[56px] ${
+                className={`flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all duration-200 min-w-[44px] ${
                   isActive
                     ? "bg-[#FDFCF7] text-[#3E2B21]"
                     : "text-[#8C8775] active:text-white"
@@ -97,6 +159,14 @@ export default function POSSidebar() {
               </Link>
             );
           })}
+          {/* Logout button */}
+          <button
+            onClick={handleLogoutClick}
+            className="flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all duration-200 min-w-[44px] text-red-400 active:text-red-300"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="text-[10px] font-bold">Logout</span>
+          </button>
         </div>
       </nav>
 
@@ -179,6 +249,19 @@ export default function POSSidebar() {
             <p className="text-[10px] text-white/50 mt-2 text-right">Target: ₹1,500</p>
           </div>
         )}
+
+        {/* Logout Button */}
+        <div className="mx-3 mb-2 relative z-10">
+          <button
+            onClick={handleLogoutClick}
+            className={`flex items-center w-full p-3 rounded-full transition-all duration-300 group text-red-400/70 hover:text-red-400 hover:bg-red-500/10 ${!isSidebarOpen && 'justify-center'}`}
+          >
+            <LogOut className="h-5 w-5" />
+            {isSidebarOpen && (
+              <span className="ml-4 text-sm font-bold">Logout</span>
+            )}
+          </button>
+        </div>
 
         {/* Identity */}
         <div className="p-4 border-t border-white/20 mx-3 mb-4 relative z-10">
